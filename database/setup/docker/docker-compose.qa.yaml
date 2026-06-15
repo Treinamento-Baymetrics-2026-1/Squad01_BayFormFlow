@@ -1,0 +1,17 @@
+services:
+  qa_flyway:
+    image: flyway/flyway:12.1.0-alpine-mongo
+    container_name: qa_flyway
+    restart: "no"
+    env_file:
+      - ../env/.env.qa
+    environment:
+      FLYWAY_SCHEMAS: ops_flyway
+    networks:
+      - qa_net
+    volumes:
+      - ../../migrations:/flyway/sql
+
+networks:
+  qa_net:
+    driver: bridge

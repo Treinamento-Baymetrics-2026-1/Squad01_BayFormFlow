@@ -1,0 +1,17 @@
+services:
+  dev_flyway:
+    image: flyway/flyway:12.1.0-alpine-mongo
+    container_name: dev_flyway
+    restart: "no"
+    env_file:
+      - ../env/.env.dev
+    environment:
+      FLYWAY_SCHEMAS: ops_flyway
+    networks:
+      - dev_net
+    volumes:
+      - ../../migrations:/flyway/sql
+
+networks:
+  dev_net:
+    driver: bridge
