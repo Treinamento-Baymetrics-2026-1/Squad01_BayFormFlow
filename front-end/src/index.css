@@ -5,6 +5,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------- Variáveis de atributos utilizadas no projeto -------------- */
+
+@theme {
+  --color-brand-primary: #003554;
+  --color-brand-secundary: #E6F6FE;
+  --color-input-border: #8CA9BA;
+
+  /* sombra campo login */
+  --shadow-box-field: 0px 2px 10px 0px #0000001A;
+}
+
+/* -------------------------------------------------------------------------- */
+
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
