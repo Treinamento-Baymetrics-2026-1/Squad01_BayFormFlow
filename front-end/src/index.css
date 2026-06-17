@@ -3,11 +3,17 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
+/* importando a fonte Rethink Sans */
+@import url('https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap');
+
 @custom-variant dark (&:is(.dark *));
 
 /* ---------- Variáveis de atributos utilizadas no projeto -------------- */
 
 @theme {
+
+  --font-sans: 'Rethink Sans', sans-serif; /* usando o 'sans' para que torne a fonte padrão */
+
   --color-brand-primary: #003554;
   --color-brand-secundary: #E6F6FE;
   --color-input-border: #8CA9BA;
@@ -20,7 +26,7 @@
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    /* --font-sans: 'Geist Variable', sans-serif; Fonte inutilizavel removida */
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
