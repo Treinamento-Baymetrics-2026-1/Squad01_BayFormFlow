@@ -1,10 +1,11 @@
+/* importando a fonte Rethink Sans */
+@import url('https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap');
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-/* importando a fonte Rethink Sans */
-@import url('https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -18,7 +19,7 @@
   --color-brand-secundary: #E6F6FE;
   --color-input-border: #8CA9BA;
 
-  /* sombra campo login */
+  /* sombra padrão */
   --shadow-box-field: 0px 2px 10px 0px #0000001A;
 }
 
