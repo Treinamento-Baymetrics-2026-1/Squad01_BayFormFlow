@@ -15,9 +15,18 @@
 
   --font-sans: 'Rethink Sans', sans-serif; /* usando o 'sans' para que torne a fonte padrão */
 
-  --color-brand-primary: #003554;
-  --color-brand-secundary: #E6F6FE;
-  --color-input-border: #8CA9BA;
+  --color-blue-primary: #003554;
+  --color-blue-secundary: #006494;
+  --color-neutral-blue: #8CA9BA;
+  --color-blue-light-secondary: #E6F6FE;
+  --color-white: #FFFFFF;
+  --color-gray-light-primary: #FDFDFE;
+  --color-gray-light-secondary: #EEF1F7;
+  --color-gray-placeholder: #737373;
+  --color-black: #000000;
+
+  --color-feedback-success: #2E7D32;
+  --color-feedback-error: #C62828;
 
   /* sombra padrão */
   --shadow-box-field: 0px 2px 10px 0px #0000001A;
