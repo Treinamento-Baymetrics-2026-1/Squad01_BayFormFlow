@@ -1,0 +1,4 @@
+database/setup/env/.env.dev
+database/setup/env/.env.main
+database/setup/env/.env.qa
+
