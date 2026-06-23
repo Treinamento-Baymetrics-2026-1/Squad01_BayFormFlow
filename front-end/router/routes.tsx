@@ -1,3 +1,4 @@
+import { SurveyPage } from "@/components/AdmProfile/Survey";
 import { AuthPage } from "@/components/Auth/Auth";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -7,6 +8,7 @@ export const Router = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/pesquisas" element={<SurveyPage />} />
       </Routes>
     </BrowserRouter>
   );
