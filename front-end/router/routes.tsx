@@ -1,4 +1,4 @@
-import { AuthPage } from "@/components/Auth/Auth";
+import { AuthPage } from "@/pages/Auth";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 
