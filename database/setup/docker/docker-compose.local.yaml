@@ -1,0 +1,17 @@
+services:
+  local_flyway:
+    image: flyway/flyway:12.1.0-alpine-mongo
+    container_name: local_flyway
+    restart: "no"
+    env_file:
+      - ../env/.env.local
+    environment:
+      FLYWAY_SCHEMAS: ops_flyway
+    networks:
+      - supabase_network_database
+    volumes:
+      - ../../migrations:/flyway/sql
+
+networks:
+  supabase_network_database:
+    external: true
