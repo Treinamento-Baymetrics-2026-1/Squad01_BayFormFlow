@@ -1,0 +1,104 @@
+name: Edge Functions CI/CD
+
+on:
+  push:
+    branches: [ dev, main ]
+    paths:
+    - 'back-end/supabase/functions/**'
+
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+    - 'back-end/supabase/functions/**'
+  workflow_dispatch: 
+
+jobs:
+  code-review:
+    name: "Code Review (Lint, Test, Check)"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5.0.1
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2.0.4
+        with:
+          deno-version: 2.4.5
+
+      - name: Check formatting
+        run: deno fmt --check supabase/functions
+
+      - name: Lint
+        run: deno lint supabase/functions
+
+      - name: Detect tests
+        id: detect-tests
+        run: |
+          if find supabase/functions \
+            \( -name "*.test.ts" -o -name "*.spec.ts" -o -name "*_test.ts" \) \
+            | grep -q .; then
+            echo "HAS_TESTS=true" >> $GITHUB_ENV
+          else
+            echo "HAS_TESTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Run tests
+        if: env.HAS_TESTS == 'true'
+        run: deno test supabase/functions
+
+      - name: Skip tests
+        if: env.HAS_TESTS == 'false'
+        run: echo "Nenhum teste encontrado. Pulando etapa de testes."
+
+      - name: Type check
+        run: deno check supabase/functions/**/*.ts
+
+  deploy-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs: code-review
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5.0.1
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase@2.39.2
+
+      - name: Link project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_DEV }}
+        run: |
+          supabase link \
+            --project-ref ${{ secrets.SUPABASE_PROJECT_ID_DEV }}
+
+      - name: Deploy Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_DEV }}
+        run: |
+          supabase functions deploy
+
+  deploy-prod:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: code-review
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5.0.1
+
+      - name: Install Supabase CLI
+        run: npm install -g supabase@2.39.2
+
+      - name: Link project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+        run: |
+          supabase link \
+            --project-ref ${{ secrets.SUPABASE_PROJECT_ID_PROD }}
+
+      - name: Deploy Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+        run: |
+          supabase functions deploy

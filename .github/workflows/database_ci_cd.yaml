@@ -1,0 +1,130 @@
+name: Database Overall Review
+
+on:
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+      - "supabase/migrations/**"
+  push:
+    branches: [ dev, main ]
+    paths: 
+      - "supabase/migrations/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sql-linting:
+    name: Running SQLFluff (syntax check)
+    runs-on: ubuntu-latest    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }} 
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SQLFluff
+        run: pip install sqlfluff
+
+      - name: Auto-Fix SQLFluff
+        continue-on-error: true
+        run: sqlfluff fix database/migrations --dialect postgres
+
+      - name: Auto Commit Fixed Scripts 
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-fix na formatação do banco de dados"
+          file_pattern: "*.sql"
+          push_options: '--set-upstream origin HEAD'
+
+  migration-test:
+    name: Dry-Run Migrations
+    runs-on: ubuntu-latest
+    needs: [ sql-linting ] 
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin_password
+          POSTGRES_DB: app_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar Cliente PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Aplicar migrações (Dry-Run)
+        env:
+          PGPASSWORD: admin_password
+        run: |
+          echo "Iniciando a execução dos scripts na pasta database/migrations..."
+          
+          # Se um script falhar, a pipeline quebra na hora
+          set -e 
+          
+          # Itera sobre todos os arquivos .sql da pasta em ordem alfabética
+          for script in $(ls database/migrations/*.sql | sort); do
+            echo "Aplicando: $script"
+            
+            # Executa o script contra o banco efêmero (Usuário e DB corrigidos)
+            psql -h localhost -U admin -d app_test_db -f "$script"
+            
+            echo "✅ $script aplicado com sucesso!"
+          done
+          
+      - name: Validação de Sucesso
+        run: echo "🎉 Todos os scripts são válidos e o banco foi construído sem erros!"
+  
+  deploy-migrations-supabase:
+    name: Deploy to Supabase via Flyway
+    runs-on: ubuntu-latest
+    needs: [migration-test] 
+
+    # Só roda se a ação vier da main e for um push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar Flyway CLI
+        run: |
+          echo "Baixando e instalando o Flyway..."
+          # Baixa o pacote oficial do repositório Maven Central e descompacta
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/10.15.0/flyway-commandline-10.15.0-linux-x64.tar.gz | tar -xvz
+          # Cria um atalho global para o comando 'flyway'
+          sudo ln -s $(pwd)/flyway-10.15.0/flyway /usr/local/bin/flyway
+
+      - name: Executar Deploy no Supabase
+        run: |
+          echo "Iniciando a migração em produção..."
+          flyway \
+            -url="${{ secrets.SUPABASE_DB_URL }}" \
+            -user="${{ secrets.SUPABASE_DB_USER }}" \
+            -password="${{ secrets.SUPABASE_DB_PASS }}" \
+            -locations="filesystem:database/migrations" \
+            -baselineOnMigrate="true" \
+            migrate
