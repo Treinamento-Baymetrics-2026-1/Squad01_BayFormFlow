@@ -1,3 +1,4 @@
+
 import { AuthPage } from "@/pages/Auth";
 import { SurveyPage } from "@/pages/Survey";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
