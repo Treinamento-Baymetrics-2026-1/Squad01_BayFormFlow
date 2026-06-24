@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS logins.t_users(
-    id          UUID            NOT NULL DEFAULT ext_pgcrypto.gen_random_uuid(),
+    id          UUID            NOT NULL DEFAULT extensions.gen_random_uuid(),
     name        VARCHAR(120)    NOT NULL,
     created_at  TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     is_deleted  BOOLEAN         NOT NULL,
