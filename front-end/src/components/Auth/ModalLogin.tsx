@@ -14,27 +14,23 @@ import { loginSchema } from "@/schema/loginSchema";
 
 export const ModalLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
   });
 
-  // acao de verificar e logar
-  const handleLogin = (_data: any) => {
-    setIsLoading(true);
+  const handleLogin = async (_data: any) => {
     setLoginError(false);
 
-    // teste de erro login (substitur depois)
-    setTimeout(() => {
-      setIsLoading(false);
-      setLoginError(true);
-    }, 1500);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // teste de erro login (substituir)
+    setLoginError(true);
   };
 
   return (
@@ -49,7 +45,6 @@ export const ModalLogin = () => {
 
         {/* formulário */}
         <div className="p-6 pt-0">
-          {/* chama a validação do formulario */}
           <form
             onSubmit={handleSubmit(handleLogin)}
             className="flex flex-col gap-5"
@@ -69,7 +64,7 @@ export const ModalLogin = () => {
                 }`}
                 placeholder="Digite seu e-mail"
                 {...register("email")}
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
 
               {errors.email && (
@@ -96,7 +91,7 @@ export const ModalLogin = () => {
                   }`}
                   placeholder="Digite sua senha"
                   {...register("password")}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
 
                 <button
@@ -107,7 +102,7 @@ export const ModalLogin = () => {
                       ? "text-feedback-error"
                       : "text-input-border"
                   }`}
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -141,10 +136,10 @@ export const ModalLogin = () => {
             {/* botão de entrar */}
             <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full h-9 bg-blue-primary text-white font-medium rounded-lg mt-2 shadow-box-field flex items-center justify-center gap-1"
+              disabled={isSubmitting}
+              className="w-full h-9 bg-blue-primary text-white font-medium rounded-lg mt-2 shadow-box-field flex items-center justify-center gap-1 cursor-pointer"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <LoaderCircle size={16} className="animate-spin" />
                   Entrando...
