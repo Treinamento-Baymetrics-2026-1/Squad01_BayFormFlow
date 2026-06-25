@@ -8,7 +8,7 @@ export const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/" element={<AuthPage />} />
         <Route path="/pesquisas" element={<SurveyPage />} />
       </Routes>
     </BrowserRouter>
