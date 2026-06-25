@@ -23,14 +23,37 @@
   --color-gray-light-primary: #FDFDFE;
   --color-gray-light-secondary: #EEF1F7;
   --color-gray-placeholder: #737373;
+  --color-gray-light-placeholder: #F2F2F2;
   --color-black: #000000;
   --color-foreground: #0A0A0A;
 
+  --color-progress-none: #003554;
+
+
+  --color-status-canceled-light: #FEE2E2;
+  --color-status-canceled: #991B1B;
+
+  --color-status-change-requested-light: #FFDAB9;
+  --color-status-change-requested: #9A3412;
+
+  --color-status-progress-light: #E0E7FF;
+  --color-status-progress: #4338CA;
+
+  --color-feedback-success-light: #CFFFE0;
   --color-feedback-success: #2E7D32;
+
+
+
   --color-feedback-error: #C62828;
 
   /* sombra padrão */
   --shadow-box-field: 0px 2px 10px 0px #0000001A;
+
+  /* sombra sidebar */
+  --shadow-sidebar-default: 0px 3px 20px 0px #00000005;
+
+  /* sombra que simula borda interna */
+  --shadow-table-border-inset: 0px -1px 0px 0px #E1E1E1 inset;
 }
 
 /* -------------------------------------------------------------------------- */
