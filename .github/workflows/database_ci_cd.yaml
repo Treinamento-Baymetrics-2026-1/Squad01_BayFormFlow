@@ -4,11 +4,11 @@ on:
   pull_request:
     branches: [ dev, main ]
     paths:
-      - "supabase/migrations/**"
+      - "back-end/migrations/**"
   push:
     branches: [ dev, main ]
     paths: 
-      - "supabase/migrations/**"
+      - "back-end/migrations/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
