@@ -25,13 +25,6 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
-
-setup/env/.env.dev
-setup/env/.env.prod
-setup/env/.env.local
-
-node_modules
-node_modules/*
  
 config.toml
 
