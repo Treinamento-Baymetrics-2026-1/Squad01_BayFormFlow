@@ -107,7 +107,7 @@ export async function handleProvisionOperator(req: Request, deps: ProvisionDeps)
     "provision_operator",
     {
       p_user_id: newUserId,
-      p_name: input.name,
+      p_display_name: input.display_name,
       p_position: input.position,
       p_is_admin: input.is_admin ?? false,
       p_created_by: me.user_id,
