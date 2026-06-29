@@ -1,5 +1,5 @@
-import { ModalLogin } from "./components/ModalLogin";
-import { SidebarAuth } from "./components/SideBarAuth";
+import { ModalLogin } from "@/components/Auth/ModalLogin";
+import { SidebarAuth } from "@/components/Auth/SideBarAuth";
 
 export const AuthPage = () => {
   return (
