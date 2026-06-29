@@ -1,9 +1,9 @@
 CREATE OR REPLACE FUNCTION helpers.provision_operator(
-    p_user_id    UUID,
-    p_name       TEXT,
-    p_position   TEXT,
-    p_is_admin   BOOLEAN,
-    p_created_by UUID
+    p_user_id       UUID,
+    p_display_name  TEXT,
+    p_position      TEXT,
+    p_is_admin      BOOLEAN,
+    p_created_by    UUID
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -31,7 +31,7 @@ BEGIN
             USING ERRCODE = 'check_violation';
     END IF;
  
-    INSERT INTO logins.t_users (id, name, is_deleted, created_by)
+    INSERT INTO logins.t_users (id, display_name, is_deleted, created_by)
     VALUES (p_user_id, p_name, FALSE, p_created_by);
  
     INSERT INTO consultants.t_employees (position, is_admin, user_id)
