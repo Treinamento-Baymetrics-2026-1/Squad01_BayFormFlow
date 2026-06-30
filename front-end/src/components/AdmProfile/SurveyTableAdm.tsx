@@ -87,7 +87,7 @@ export const SurveyTableAdm = () => {
   };
 
   return (
-    <div className="w-full px-16 py-18.75">
+    <div className="w-full px-16 py-17.5">
       <div className="flex justify-between items-center w-full">
         <h3 className="font-bold text-2xl text-blue-primary">Pesquisas</h3>
         <Button
