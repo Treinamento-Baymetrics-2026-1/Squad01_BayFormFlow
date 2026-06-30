@@ -10,12 +10,6 @@ on:
     paths:
       - "front-end/**"
   workflow_dispatch:
-    inputs:
-      frontend_path:
-        description: 'Diretório do front-end para teste manual'
-        required: false
-        default: 'front-end'
-        type: string
 
 permissions:
   contents: read
@@ -25,7 +19,6 @@ permissions:
 # ---------------------------------------------------------
 env:
   NODE_VERSION: '24.x'
-  FRONTEND_DIR: ${{ github.event.inputs.frontend_path || 'front-end' }}
 
 jobs:
   validate-and-build:
@@ -33,18 +26,18 @@ jobs:
     runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: ${{ env.FRONTEND_DIR }}
+        working-directory: ./front-end
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.FRONTEND_DIR }}/package-lock.json'
+          cache-dependency-path: './front-end/package-lock.json'
 
       - name: Install Dependencies
         run: npm ci
