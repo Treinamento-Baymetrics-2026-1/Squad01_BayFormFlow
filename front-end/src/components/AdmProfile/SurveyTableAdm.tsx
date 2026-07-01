@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LucidePlus } from "lucide-react";
 import {
@@ -9,14 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "../ui/PaginationDefault";
 
 const pesquisas = [
   {
@@ -70,21 +63,14 @@ const pesquisas = [
 ];
 
 export const SurveyTableAdm = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6; // itens por pagina
-
-  const totalPages = Math.ceil(pesquisas.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = pesquisas.slice(startIndex, endIndex);
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+  const {
+    currentPage,
+    totalPages,
+    currentItems,
+    handlePrevPage,
+    handleNextPage,
+    goToPage,
+  } = usePagination({ data: pesquisas });
 
   return (
     <div className="w-full px-16 py-17.5">
@@ -179,44 +165,14 @@ export const SurveyTableAdm = () => {
           </TableBody>
         </Table>
 
-        <Pagination className="py-8 select-none">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                className={
-                  currentPage === 1
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                }
-                onClick={handlePrevPage}
-              />
-            </PaginationItem>
-
-            {/* pega o tamanho do veotor de dados e transforma no total de páginas*/}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  className="cursor-pointer"
-                  isActive={page === currentPage}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            <PaginationItem>
-              <PaginationNext
-                className={
-                  currentPage === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                }
-                onClick={handleNextPage}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        {/* Componente de paginação (ui/PaginationDefault.tsx) */}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          goToPage={goToPage}
+        />
       </div>
     </div>
   );
