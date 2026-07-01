@@ -5,13 +5,17 @@ DECLARE
     v_digit INT;
     v_i INT;
     v_char_val INT;
-    v_cnpj_array INT[14];
+    v_cnpj_array TEXT[14];
     -- Pesos oficiais para o primeiro e segundo dígito verificador
     v_weights_1 INT[] := ARRAY[5,4,3,2,9,8,7,6,5,4,3,2];
     v_weights_2 INT[] := ARRAY[6,5,4,3,2,9,8,7,6,5,4,3,2];
 BEGIN
-    -- 1. Valida o tamanho exato de 14 caracteres
-    IF LENGTH(v_cnpj) != 14 THEN
+
+    -- Verifica se:
+    -- os primeiros 12 digitos contem somente números (0-9) e/ou letras maiusculas (A-Z);
+    -- os ultimos 2 digitos são estritamente numericos (0-9);
+    -- Se possui exatamente 14 digitos.
+    IF NOT p_cnpj ~ '^[0-9A-Z]{12}[0-9]{2}$' THEN
         RETURN FALSE;
     END IF;
 
@@ -24,14 +28,7 @@ BEGIN
     END IF;
 
     -- 2. Destrincha o cnpj em um array
-    FOR v_1 IN 1..14 LOOP
-        v_cnpj_array := array_append(SUBSTRING(p_cnpj FROM v_i FOR 1)::INT);
-    END LOOP;
-
-    -- 3. Os dois últimos caracteres devem ser estritamente numéricos
-    IF v_cnpj_array[13] ~ '[^0-9]' and v_cnpj_array[14] ~ '[^0-9]' THEN
-        RETURN FALSE;
-    END IF;
+    SELECT ARRAY(SELECT REGEXP_SPLIT_TO_TABLE(p_cnpj, '')::TEXT) INTO v_cnpj_array;
 
     -- 4. Cálculo do Primeiro Dígito Verificador
     v_sum := 0;
@@ -47,7 +44,7 @@ BEGIN
     END IF;
 
     -- Valida se o primeiro dígito bate com a posição 13
-    IF v_digit != v_cnpj_array[13] THEN
+    IF v_digit != v_cnpj_array[13]::SMALLINT THEN
         RETURN FALSE;
     END IF;
 
@@ -64,7 +61,7 @@ BEGIN
     END IF;
 
     -- Valida se o segundo dígito bate com a posição 14
-    IF v_digit != v_cnpj_array[14] THEN
+    IF v_digit != v_cnpj_array[14]::SMALLINT THEN
         RETURN FALSE;
     END IF;
 

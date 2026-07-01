@@ -4,6 +4,10 @@ CREATE SCHEMA IF NOT EXISTS consultants;
 CREATE SCHEMA IF NOT EXISTS consultancies;
 CREATE SCHEMA IF NOT EXISTS logs;
 
+-- Functions
+CREATE SCHEMA IF NOT EXISTS helpers;
+
+-- Extensions
 CREATE SCHEMA IF NOT EXISTS ext_pgcrypto;
 CREATE EXTENSION IF NOT EXISTS pgcrypto
     WITH SCHEMA ext_pgcrypto;

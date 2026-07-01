@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.provision_operator(
+CREATE OR REPLACE FUNCTION helpers.provision_operator(
     p_user_id       UUID,
     p_display_name  TEXT,
     p_position      TEXT,
@@ -47,5 +47,5 @@ BEGIN
 END;
 $$;
  
-REVOKE EXECUTE ON FUNCTION public.provision_operator(UUID, TEXT, TEXT, BOOLEAN, UUID) FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.provision_operator(UUID, TEXT, TEXT, BOOLEAN, UUID) TO service_role;
+REVOKE EXECUTE ON FUNCTION helpers.provision_operator(UUID, TEXT, TEXT, BOOLEAN, UUID) FROM public;
+GRANT EXECUTE ON FUNCTION helpers.provision_operator(UUID, TEXT, TEXT, BOOLEAN, UUID) TO service_role;
