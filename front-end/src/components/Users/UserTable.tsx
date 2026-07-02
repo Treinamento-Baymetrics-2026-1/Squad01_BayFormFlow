@@ -74,13 +74,8 @@ interface Usuario {
 
 export const UserTable = () => {
   const {
-    currentPage,
-    totalPages,
-    currentItems,
-    handlePrevPage,
-    handleNextPage,
-    goToPage,
-  } = usePagination({ data: usuarios });
+    currentItems, paginationProps
+  } = usePagination({ data: usuarios}); // , initialItemsPerPage: 2 (alterar itens por páginas apenas nessa tela (padrão 6))
 
   // Estados para controle dos Modais
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -221,13 +216,7 @@ export const UserTable = () => {
         </Table>
 
         {/* Componente de paginação (ui/PaginationDefault.tsx) */}
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          goToPage={goToPage}
-        />
+        <TablePagination {...paginationProps} />
       </div>
 
       {/* Quando clicar em Editar */}

@@ -64,12 +64,7 @@ const pesquisas = [
 
 export const SurveyTableAdm = () => {
   const {
-    currentPage,
-    totalPages,
-    currentItems,
-    handlePrevPage,
-    handleNextPage,
-    goToPage,
+    currentItems, paginationProps
   } = usePagination({ data: pesquisas });
 
   return (
@@ -166,13 +161,7 @@ export const SurveyTableAdm = () => {
         </Table>
 
         {/* Componente de paginação (ui/PaginationDefault.tsx) */}
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-          goToPage={goToPage}
-        />
+        <TablePagination {...paginationProps}/>
       </div>
     </div>
   );

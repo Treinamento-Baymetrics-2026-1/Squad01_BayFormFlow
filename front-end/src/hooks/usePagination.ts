@@ -1,15 +1,17 @@
 import { useState } from "react";
-
 interface UsePaginationProps<T> {
   data: T[];
-  itemsPerPage?: number;
+  initialItemsPerPage?: number;
 }
 
 export function usePagination<T>({
   data,
-  itemsPerPage = 6,
+  // aqui se altera a quantidade de itens por página (se não passar o valor posteriormente, ele se torna padrão)
+  initialItemsPerPage = 6,
 }: UsePaginationProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
 
   const totalPages = Math.ceil(data.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -25,17 +27,21 @@ export function usePagination<T>({
   };
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
-  return {
+  //spread na chamada do componente
+  const paginationProps = {
     currentPage,
     totalPages,
-    currentItems,
     handlePrevPage,
     handleNextPage,
     goToPage,
+  };
+
+  return {
+    currentItems,
+    setItemsPerPage,
+    paginationProps,
   };
 }
