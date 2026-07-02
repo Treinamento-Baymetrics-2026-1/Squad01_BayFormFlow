@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS logins.t_users(
 
     CONSTRAINT logins_t_users_ck_name
         CHECK(
-            display_name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
+            display_name ~* '^\S(?!.*\s{2,})[a-záàâãçèéêìíîóòôõúùû.,& -]+\S$'
         ),
     
     CONSTRAINT logins_t_users_ck_deleted_at
