@@ -2,6 +2,7 @@ import AdminLayout from '@/components/AdminLayout/AdminLayout';
 import { AuthPage } from '@/pages/Auth';
 import { OverviewPage } from '@/pages/Overview';
 import { SurveyPage } from '@/pages/Survey';
+import { UsersPage } from '@/pages/Users';
 import { createBrowserRouter } from 'react-router-dom';
 
 
@@ -21,6 +22,10 @@ export const Router = createBrowserRouter([
       {
         path: 'pesquisas',
         element: <SurveyPage />,
+      },
+      {
+        path: 'usuarios',
+        element: <UsersPage />,
       },
       // Outras páginas que usam a sidebar entram aqui...
     ],
