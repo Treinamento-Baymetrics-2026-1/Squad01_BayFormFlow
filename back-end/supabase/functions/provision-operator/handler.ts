@@ -6,6 +6,9 @@ interface SupabaseResult<T = unknown> {
 }
 
 export interface CallerClient {
+  schema(
+    schema: string,
+  ):CallerClient;
   rpc(
     fn: string,
     params?: Record<string, unknown>,
@@ -23,6 +26,9 @@ export interface AdminClient {
       deleteUser(id: string): PromiseLike<SupabaseResult>;
     };
   };
+  schema(
+    schema: string,
+  ):AdminClient;
   rpc(
     fn: string,
     params?: Record<string, unknown>,
@@ -36,7 +42,7 @@ export interface ProvisionDeps {
 
 export const provisionInputSchema = z
   .object({
-    name: z.string().min(1).max(120),
+    display_name: z.string().min(1).max(120),
     email: z.string().email(),
     password: z.string().min(8),
     position: z.enum(["validador", "gestor"]),
@@ -62,7 +68,9 @@ function json(body: unknown, status: number): Response {
 }
 
 export async function handleProvisionOperator(req: Request, deps: ProvisionDeps): Promise<Response> {
-  const { data: meData, error: meError } = await deps.caller.rpc("me");
+  console.log("Chamando 'me'...");
+  const { data: meData, error: meError } = await deps.caller.schema("helpers").rpc("me");
+  console.log(meData);
   if (meError || !meData) {
     return json({ error: "Não autorizado." }, 403);
   }
@@ -103,7 +111,7 @@ export async function handleProvisionOperator(req: Request, deps: ProvisionDeps)
   }
   const newUserId = created.user.id;
 
-  const { data: rpcData, error: rpcError } = await deps.admin.rpc(
+  const { data: rpcData, error: rpcError } = await deps.admin.schema("helpers").rpc(
     "provision_operator",
     {
       p_user_id: newUserId,

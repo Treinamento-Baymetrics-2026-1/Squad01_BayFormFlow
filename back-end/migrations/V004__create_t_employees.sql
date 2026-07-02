@@ -7,11 +7,11 @@ CREATE TABLE IF NOT EXISTS consultants.t_employees(
         CACHE 1
         SEQUENCE NAME consultants_t_employees_id_seq
     ),
-    position consultants.employee_position NOT NULL,
-    is_admin BOOLEAN NOT NULL,
-    updated_at TIMESTAMPTZ NULL,
-    updated_by UUID NULL,
-    user_id UUID NOT NULL,
+    position    consultants.employee_position   NOT NULL,
+    is_admin    BOOLEAN                         NOT NULL,
+    updated_at  TIMESTAMPTZ                     NULL,
+    updated_by  UUID                            NULL,
+    user_id     UUID                            NOT NULL,
 
     CONSTRAINT consultants_t_employees_pk PRIMARY KEY(id),
     

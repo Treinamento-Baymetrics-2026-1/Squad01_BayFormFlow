@@ -1,16 +1,16 @@
 CREATE TABLE IF NOT EXISTS logins.t_users(
-    id          UUID            NOT NULL DEFAULT extensions.gen_random_uuid(),
-    name        VARCHAR(120)    NOT NULL,
-    created_at  TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
-    is_deleted  BOOLEAN         NOT NULL,
-    deleted_at  TIMESTAMPTZ     NULL,
-    created_by  UUID            NOT NULL,
+    id              UUID            NOT NULL DEFAULT extensions.gen_random_uuid(),
+    display_name    VARCHAR(120)    NOT NULL,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    is_deleted      BOOLEAN         NOT NULL,
+    deleted_at      TIMESTAMPTZ     NULL,
+    created_by      UUID            NOT NULL,
 
     CONSTRAINT logins_t_users_pk PRIMARY KEY(id),
 
     CONSTRAINT logins_t_users_ck_name
         CHECK(
-            name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû ]+\S$'
+            display_name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
         ),
     
     CONSTRAINT logins_t_users_ck_deleted_at
