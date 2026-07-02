@@ -1,0 +1,251 @@
+{
+  "info": {
+    "name": "BayFormFlow — auth (local)",
+    "_postman_id": "b0f1a1c2-0000-4a00-9000-bayformflowauth",
+    "description": "Kit de teste manual da Edge Function `auth` no Supabase local.\n\nRotas: POST /functions/v1/auth/operators e POST /functions/v1/auth/companies.\n\nSubida do ambiente (volume limpo, nesta ordem):\n1) npx supabase db start — sobe SÓ o Postgres (evita o 503 do PostgREST em banco novo).\n2) Flyway: docker compose -f setup/docker/docker-compose.local.yaml run --rm local_flyway migrate — aplica V001–V010; a V010 JÁ cria o admin (não existe mais seed.sql).\n3) npx supabase start — demais serviços; os schemas já existem e o health check passa.\n\nAntes de rodar: preencha a variável `anonKey` com a anon/publishable key impressa pelo `supabase start`. Rode o request 1 (Login) primeiro — ele salva `adminToken` automaticamente.\n\nObs.: os CHECKs do banco (CNPJ com dígito verificador, phonenumber) podem rejeitar valores que o Zod aceita — nesse caso a saga retorna 500 (rollback). Os samples usam valores que passam.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:54321" },
+    { "key": "anonKey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0" },
+    { "key": "adminEmail", "value": "admin@bayformflow.local" },
+    { "key": "adminPassword", "value": "Admin@12345" },
+    { "key": "adminToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Login admin (salva adminToken)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.access_token) { pm.collectionVariables.set('adminToken', json.access_token); }",
+              "pm.test('200 + access_token', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(json.access_token, 'access_token').to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/v1/token?grant_type=password",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "v1", "token"],
+          "query": [{ "key": "grant_type", "value": "password" }]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+        },
+        "description": "signInWithPassword direto no Auth (NÃO passa pela Edge Function). Salva o access_token do admin em {{adminToken}}."
+      }
+    },
+    {
+      "name": "2. Whoami — rpc me() (confirma is_admin)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 + is_admin true', function () {",
+              "  pm.response.to.have.status(200);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j.is_admin, 'is_admin').to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Content-Profile", "value": "helpers" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/rest/v1/rpc/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["rest", "v1", "rpc", "me"]
+        },
+        "body": { "mode": "raw", "raw": "{}" },
+        "description": "Sanidade: confirma que o token é de um admin (a Edge Function exige isso; senão retorna 403). A me() vive no schema helpers — o header Content-Profile diz ao PostgREST onde procurar (sem ele: PGRST202, pois o default é public)."
+      }
+    },
+    {
+      "name": "3. Provisionar operador (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 + user_id/employee_id', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j).to.have.property('user_id');",
+              "  pm.expect(j).to.have.property('employee_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/operators",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "operators"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"Fulano De Tal\",\n  \"email\": \"operador@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"position\": \"Validador\",\n  \"is_admin\": false\n}"
+        },
+        "description": "Cadastro de operador. Troque o email a cada execução (email repetido -> 409)."
+      }
+    },
+    {
+      "name": "4. Provisionar compania (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 + user_id/company_id', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j).to.have.property('user_id');",
+              "  pm.expect(j).to.have.property('company_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/companies",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "companies"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"Empresa Modelo\",\n  \"email\": \"empresa@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"cnpj\": \"11222333000181\",\n  \"phonenumber\": \"11987654321\"\n}"
+        },
+        "description": "Cadastro de compania. CNPJ 11222333000181 tem dígito verificador válido. Troque o email a cada execução."
+      }
+    },
+    {
+      "name": "5. Operador sem token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('401', function () { pm.response.to.have.status(401); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/operators",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "operators"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"Fulano De Tal\",\n  \"email\": \"x@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"position\": \"Validador\"\n}"
+        },
+        "description": "Sem header Authorization -> 401 (middleware requireAuth, antes do Zod)."
+      }
+    },
+    {
+      "name": "6. Operador body inválido (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('400', function () { pm.response.to.have.status(400); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/operators",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "operators"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"nao-eh-email\",\n  \"password\": \"123\"\n}"
+        },
+        "description": "Body inválido (faltam campos, email/senha ruins) -> 400 (zValidator/Zod)."
+      }
+    },
+    {
+      "name": "7. Validador com is_admin (400 refine)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('400 (refine)', function () { pm.response.to.have.status(400); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/operators",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "operators"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"Fulano De Tal\",\n  \"email\": \"refine@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"position\": \"Validador\",\n  \"is_admin\": true\n}"
+        },
+        "description": "is_admin=true só é válido com position=Gestor -> 400 (.refine do Zod)."
+      }
+    }
+  ]
+}
