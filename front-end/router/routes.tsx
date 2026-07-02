@@ -1,5 +1,6 @@
 import AdminLayout from '@/components/AdminLayout/AdminLayout';
 import { AuthPage } from '@/pages/Auth';
+import { CompaniesPage } from '@/pages/Companies';
 import { OverviewPage } from '@/pages/Overview';
 import { SurveyPage } from '@/pages/Survey';
 import { UsersPage } from '@/pages/Users';
@@ -26,6 +27,10 @@ export const Router = createBrowserRouter([
       {
         path: 'usuarios',
         element: <UsersPage />,
+      },
+      {
+        path: 'empresas',
+        element: <CompaniesPage />,
       },
       // Outras páginas que usam a sidebar entram aqui...
     ],
