@@ -11,8 +11,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
     "format:fix": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
     "type-check": "tsc --noEmit",
-    "test": "vitest",
-    "test:ci": "vitest run --coverage"
+    "test": "vitest --passWithNoTests",
+    "test:ci": "vitest run --coverage --passWithNoTests"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",

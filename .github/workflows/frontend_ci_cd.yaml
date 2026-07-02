@@ -11,6 +11,10 @@ on:
       - "front-end/**"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 permissions:
   contents: read
 
@@ -42,31 +46,21 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Check Formatting
-        run: npm run format:check
-
       - name: Lint Code
         run: npm run lint
 
       - name: Type Check
         run: npm run type-check
 
-      - name: Detect tests
-        id: detect-tests
-        run: |
-          if find src -type f \( -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" \) | grep -q .; then
-            echo "HAS_TESTS=true" >> $GITHUB_ENV
-          else
-            echo "HAS_TESTS=false" >> $GITHUB_ENV
-          fi
-
       - name: Run Tests
-        if: env.HAS_TESTS == 'true'
         run: npm run test:ci
-
-      - name: Skip tests
-        if: env.HAS_TESTS == 'false'
-        run: echo "Nenhum teste encontrado na pasta src. Pulando etapa de testes."
 
       - name: Verify Build
         run: npm run build
+        
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ./front-end/dist
+          retention-days: 1

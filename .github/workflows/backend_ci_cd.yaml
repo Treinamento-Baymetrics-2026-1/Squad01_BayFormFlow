@@ -1,79 +1,115 @@
-name: Front-End CI/CD
+name: Edge Functions CI/CD
 
 on:
-  pull_request:
-    branches: [ dev, main ]
-    paths:
-      - "front-end/**"
   push:
     branches: [ dev, main ]
     paths:
-      - "front-end/**"
+      - 'back-end/supabase/functions/**'
+
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+      - 'back-end/supabase/functions/**'
+
   workflow_dispatch:
     inputs:
-      frontend_path:
-        description: 'Diretório do front-end para teste manual'
+      functions_path:
+        description: 'Diretório das edge functions para teste manual'
         required: false
-        default: 'front-end'
+        default: 'back-end/supabase/functions'
         type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
 
-# ---------------------------------------------------------
-# VARIÁVEIS GLOBAIS
-# ---------------------------------------------------------
 env:
-  NODE_VERSION: '24.x'
-  FRONTEND_DIR: ${{ github.event.inputs.frontend_path || 'front-end' }}
+  EDGE_FUNCTIONS_PATH: ${{ github.event.inputs.functions_path || 'back-end/supabase/functions' }}
 
 jobs:
-  validate-and-build:
-    name: "Validate & Build (Lint, Type Check, Test)"
+  code-review:
+    name: Code Review - Lint & Test & Check
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        working-directory: ${{ env.FRONTEND_DIR }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.1
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2.0.4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: '${{ env.FRONTEND_DIR }}/package-lock.json'
+          deno-version: 2.4.5
 
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Check Formatting
-        run: npm run format:check
-
-      - name: Lint Code
-        run: npm run lint
-
-      - name: Type Check
-        run: npm run type-check
+      - name: Lint
+        run: deno lint --json ${{ env.EDGE_FUNCTIONS_PATH }} 
 
       - name: Detect tests
         id: detect-tests
         run: |
-          if find src -type f \( -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" \) | grep -q .; then
+          if find ${{ env.EDGE_FUNCTIONS_PATH }} \
+            \( -name "*.test.ts" -o -name "*.spec.ts" -o -name "*_test.ts" \) \
+            | grep -q .; then
             echo "HAS_TESTS=true" >> $GITHUB_ENV
           else
             echo "HAS_TESTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Run Tests
+      - name: Run tests
         if: env.HAS_TESTS == 'true'
-        run: npm run test:ci
+        run: deno test --allow-all ${{ env.EDGE_FUNCTIONS_PATH }}
 
       - name: Skip tests
         if: env.HAS_TESTS == 'false'
-        run: echo "Nenhum teste encontrado na pasta src. Pulando etapa de testes."
+        run: echo "Nenhum teste encontrado. Pulando etapa de testes."
 
-      - name: Verify Build
-        run: npm run build
+      - name: Type check
+        run: find ${{ env.EDGE_FUNCTIONS_PATH }} -name "*.ts" | xargs deno check
+
+  deploy-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    needs: code-review
+    runs-on: ubuntu-22.04
+
+    defaults:
+      run:
+        working-directory: ./back-end 
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Functions to DEV
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_DEV }}
+        run: |
+          # Deploys de todas as functions usando a ref direto no comando
+          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_DEV }}
+
+  deploy-prod:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: code-review
+    runs-on: ubuntu-22.04
+    
+    defaults:
+      run:
+        working-directory: ./back-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Functions to PROD
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+        run: |
+          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_PROD }}
