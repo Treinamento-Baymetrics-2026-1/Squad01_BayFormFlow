@@ -9,6 +9,7 @@ export function createSupabaseAdminAdapter(caller: SupabaseClient): AdminPort {
       const { data, error } = await caller.schema("helpers").rpc("me");
       if (error || data === null) {
         return null;
+        
       }
       return parseIdentity(data);
     },

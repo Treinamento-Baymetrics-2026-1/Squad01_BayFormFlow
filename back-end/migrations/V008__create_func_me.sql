@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.me()
+CREATE OR REPLACE FUNCTION helpers.me()
 RETURNS jsonb
 LANGUAGE plpgsql
 STABLE
@@ -26,5 +26,5 @@ BEGIN
 END;
 $$;
  
-REVOKE EXECUTE ON FUNCTION public.me() FROM PUBLIC;
-GRANT  EXECUTE ON FUNCTION public.me() TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION helpers.me() FROM public;
+GRANT EXECUTE ON FUNCTION helpers.me() TO authenticated, service_role;
