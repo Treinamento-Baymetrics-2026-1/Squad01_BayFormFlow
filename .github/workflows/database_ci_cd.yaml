@@ -1,6 +1,13 @@
 name: Database Overall Review
 
 on:
+  workflow_dispatch:
+    inputs:
+      migrations_path:
+        description: 'Diretório das migrações para teste manual'
+        required: false
+        default: 'back-end/migrations'
+        type: string
   pull_request:
     branches: [ dev, main ]
     paths:
@@ -9,13 +16,6 @@ on:
     branches: [ dev, main ]
     paths: 
       - "back-end/migrations/**"
-  workflow_dispatch:
-    inputs:
-      migrations_path:
-        description: 'Diretório das migrações para teste manual'
-        required: false
-        default: 'back-end/migrations'
-        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
