@@ -3,7 +3,7 @@
 dialect = postgres
 
 # Ignora a pasta target ou dependências
-exclude_rules = LT01, LT02, LT12, CP05, CP03
+exclude_rules = LT01, LT02, LT12, CP05, CP03, RF04
 ignore = templating
 
 # Define o tamanho máximo da linha
