@@ -5,12 +5,6 @@ CREATE TABLE IF NOT EXISTS logins.t_users(
     is_deleted      BOOLEAN         NOT NULL,
     deleted_at      TIMESTAMPTZ     NULL,
     created_by      UUID            NOT NULL,
-    id              UUID            NOT NULL DEFAULT extensions.gen_random_uuid(),
-    display_name    VARCHAR(120)    NOT NULL,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
-    is_deleted      BOOLEAN         NOT NULL,
-    deleted_at      TIMESTAMPTZ     NULL,
-    created_by      UUID            NOT NULL,
 
     CONSTRAINT logins_t_users_pk PRIMARY KEY(id),
 
