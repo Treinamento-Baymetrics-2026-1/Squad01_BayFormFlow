@@ -3,6 +3,7 @@ import { X, CircleCheckBig } from "lucide-react";
 
 interface Empresa {
   razaoSocial: string;
+  nomeFantasia?: string;
   cnpj: string;
   email: string;
   status: string;
@@ -20,6 +21,7 @@ export const CompaniesFormModal = ({
   const isEditMode = !!empresa;
 
   const [razaoSocial, setRazaoSocial] = useState(empresa?.razaoSocial ?? "");
+  const [nomeFantasia, setNomeFantasia] = useState(empresa?.nomeFantasia ?? "");
   const [email, setEmail] = useState(empresa?.email ?? "");
   const [cnpj, setCnpj] = useState(empresa?.cnpj ?? "");
   const [status, setStatus] = useState(empresa?.status ?? "Ativo");
@@ -29,12 +31,18 @@ export const CompaniesFormModal = ({
     if (isEditMode) {
       console.log("Salvando modificações:", {
         razaoSocial,
+        nomeFantasia,
         email,
         cnpj,
         status,
       });
     } else {
-      console.log("Cadastrando nova empresa:", { razaoSocial, email, cnpj });
+      console.log("Cadastrando nova empresa:", {
+        razaoSocial,
+        nomeFantasia,
+        email,
+        cnpj,
+      });
     }
     onClose();
   };
@@ -56,7 +64,7 @@ export const CompaniesFormModal = ({
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-bold text-black">Razão social</label>
+            <label className="text-sm font-medium text-black">Razão social</label>
             <input
               type="text"
               value={razaoSocial}
@@ -66,11 +74,24 @@ export const CompaniesFormModal = ({
             />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-black">
+              Nome fantasia
+            </label>
+            <input
+              type="text"
+              value={nomeFantasia}
+              onChange={(e) => setNomeFantasia(e.target.value)}
+              className="w-full h-10 px-3 border border-neutral-blue rounded-lg text-sm text-black shadow-box-field focus:outline-none placeholder:text-gray-placeholder"
+              placeholder="Digite o nome fantasia da empresa"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-black">E-mail</label>
+              <label className="text-sm font-medium text-black">E-mail</label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full h-10 px-3 border border-neutral-blue rounded-lg text-sm text-black shadow-box-field focus:outline-none placeholder:text-gray-placeholder"
@@ -79,7 +100,7 @@ export const CompaniesFormModal = ({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-black">CNPJ</label>
+              <label className="text-sm font-medium text-black">CNPJ</label>
               <input
                 type="text"
                 value={cnpj}
