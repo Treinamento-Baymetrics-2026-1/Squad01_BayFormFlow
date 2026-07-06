@@ -7,7 +7,13 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Plus, LucideEdit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, LucideEdit, LucideEllipsis } from "lucide-react";
 import { Button } from "../ui/button";
 import { usePagination } from "@/hooks/usePagination";
 import { CompaniesFormModal } from "./CompaniesFormModal";
@@ -76,6 +82,10 @@ export const CompaniesTable = () => {
     setSelectedCompany(null);
   };
 
+  const handleToggleStatus = (email: string, currentStatus: string) => {
+    console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
+  };
+
   return (
     <div className="w-full px-16 py-17.5">
       <div className="flex justify-between items-center w-full">
@@ -136,7 +146,7 @@ export const CompaniesTable = () => {
 
                 <TableCell className="py-4 px-8 text-center">
                   <span
-                    className={`inline-flex items-center justify-center px-4 py-1 text-xs font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
+                    className={`inline-flex items-center justify-center px-4 py-1 text-sm font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
                   >
                     {item.status}
                   </span>
@@ -149,6 +159,30 @@ export const CompaniesTable = () => {
                   >
                     <LucideEdit size={18} />
                   </button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="inline-flex items-center justify-center px-1.5 cursor-pointer text-black">
+                        <LucideEllipsis size={18} />
+                      </button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                      align="end"
+                      className="rounded-md border shadow-box-field gap-2 p-1 min-w-52.75 bg-white"
+                    >
+                      <DropdownMenuItem
+                        onClick={() =>
+                          handleToggleStatus(item.email, item.status)
+                        }
+                        className="cursor-pointer text-sm font-medium py-2 px-4 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-accent-foreground"
+                      >
+                        {item.status === "Ativo"
+                          ? "Desativar Empresa"
+                          : "Ativar Empresa"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
@@ -175,9 +209,9 @@ export const CompaniesTable = () => {
 function getStatusStyles(status: string) {
   switch (status) {
     case "Ativo":
-      return "text-status-active border border-status-active bg-status-active-light";
+      return "text-status-active border border-status-active";
     case "Inativo":
-      return "text-gray-placeholder border border-gray-placeholder bg-gray-50";
+      return "text-gray-placeholder border border-gray-placeholder";
     default:
       return "";
   }
