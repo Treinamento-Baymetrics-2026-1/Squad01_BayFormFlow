@@ -163,7 +163,7 @@ export const UserTable = () => {
 
                 <TableCell className="py-4 text-center">
                   <span
-                    className={`inline-flex items-center justify-center px-4 py-1 text-xs font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
+                    className={`inline-flex items-center justify-center px-4 py-1 text-sm font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
                   >
                     {item.status}
                   </span>
@@ -235,9 +235,9 @@ export const UserTable = () => {
 function getStatusStyles(status: string) {
   switch (status) {
     case "Ativo":
-      return "text-status-active border border-status-active bg-status-active-light";
+      return "text-status-active border border-status-active";
     case "Inativo":
-      return "text-gray-placeholder border border-gray-placeholder bg-gray-50";
+      return "text-gray-placeholder border border-gray-placeholder";
     default:
       return "";
   }
