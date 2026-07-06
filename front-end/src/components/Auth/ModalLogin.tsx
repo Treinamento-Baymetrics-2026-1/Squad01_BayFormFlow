@@ -150,7 +150,7 @@ export const ModalLogin = () => {
 
             {/* Alerta de erro */}
             {loginError && (
-              <div className="flex items-center gap-2 p-3 rounded-lg border border-feedback-error bg-red-50 text-feedback-error text-sm font-medium">
+              <div className="flex items-center gap-2 p-3 rounded-lg border border-feedback-error bg-feedback-error-light text-feedback-error text-sm font-medium">
                 <AlertCircle size={16} className="shrink-0" />
                 <span>E-mail ou senha incorretos. Tente novamente.</span>
               </div>
