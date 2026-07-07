@@ -35,7 +35,9 @@ export const ModalLogin = () => {
   //verificar se o usuário já logado
   useEffect(() => {
     const checkUserSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         navigate("/visao-geral");
       }
@@ -60,7 +62,6 @@ export const ModalLogin = () => {
       setTimeout(() => {
         navigate("/visao-geral");
       }, 1500);
-      
     },
     onError: (error) => {
       console.error(error);
@@ -122,7 +123,7 @@ export const ModalLogin = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className={`w-full h-9 py-2 px-4 border rounded-lg placeholder-gray-placeholder ${
+                  className={`w-full h-9 py-2 pl-4 pr-10 border rounded-lg placeholder-gray-placeholder [&::-ms-reveal]:hidden ${
                     errors.password
                       ? "border-feedback-error focus-visible:ring-feedback-error"
                       : "border-input-border"
@@ -171,7 +172,10 @@ export const ModalLogin = () => {
             {/* Alerta de sucesso */}
             {loginSuccess && (
               <div className="flex items-center gap-2 p-3 rounded-lg border border-feedback-success bg-feedback-success-light text-black text-sm font-medium">
-                <CheckCircle2 size={16} className="shrink-0 text-feedback-success" />
+                <CheckCircle2
+                  size={16}
+                  className="shrink-0 text-feedback-success"
+                />
                 <span>Login realizado com sucesso!</span>
               </div>
             )}
