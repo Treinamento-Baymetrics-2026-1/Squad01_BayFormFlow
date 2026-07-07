@@ -6,6 +6,7 @@ import { SurveyPage } from "@/pages/Survey";
 import { UsersPage } from "@/pages/Users";
 import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { NewSurveyPage } from "@/pages/NewSurvey";
 
 export const Router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ export const Router = createBrowserRouter([
           {
             path: "pesquisas",
             element: <SurveyPage />,
+          },
+          {
+            path: "pesquisas/novapesquisa",
+            element: <NewSurveyPage />,
           },
           {
             path: "usuarios",
