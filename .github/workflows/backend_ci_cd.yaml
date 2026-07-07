@@ -95,10 +95,10 @@ jobs:
  
       - name: Deploy Functions to DEV
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_DEV }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SPBS_ACCESS_TOKEN_DEV }}
         run: |
           # Deploys de todas as functions usando a ref direto no comando
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_DEV }}
+          supabase functions deploy --project-ref ${{ secrets.SPBS_PROJECT_ID_DEV }}
  
   deploy-prod:
     if: |
@@ -122,6 +122,6 @@ jobs:
  
       - name: Deploy Functions to PROD
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SPBS_ACCESS_TOKEN_PROD }}
         run: |
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_PROD }}
+          supabase functions deploy --project-ref ${{ secrets.SPBS_PROJECT_ID_PROD }}

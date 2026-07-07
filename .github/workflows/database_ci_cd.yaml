@@ -132,9 +132,9 @@ jobs:
         run: |
           echo "Iniciando a migração em produção..."
           flyway \
-            -url="${{ secrets.SUPABASE_DB_URL }}" \
-            -user="${{ secrets.SUPABASE_DB_USER }}" \
-            -password="${{ secrets.SUPABASE_DB_PASS }}" \
+            -url="${{ secrets.SPBS_DB_URL_DEV }}" \
+            -user="${{ secrets.SPBS_DB_USER_DEV }}" \
+            -password="${{ secrets.SPBS_DB_PASS_DEV }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate="true" \
             migrate
@@ -164,9 +164,9 @@ jobs:
         run: |
           echo "Iniciando a migração em produção..."
           flyway \
-            -url="${{ secrets.SUPABASE_DB_URL }}" \
-            -user="${{ secrets.SUPABASE_DB_USER }}" \
-            -password="${{ secrets.SUPABASE_DB_PASS }}" \
+            -url="${{ secrets.SPBS_DB_URL_PROD }}" \
+            -user="${{ secrets.SPBS_DB_USER_PROD }}" \
+            -password="${{ secrets.SPBS_DB_PASS_PROD }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate="true" \
             migrate
