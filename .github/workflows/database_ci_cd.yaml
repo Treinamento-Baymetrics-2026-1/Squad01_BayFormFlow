@@ -107,13 +107,47 @@ jobs:
       - name: Validação de Sucesso
         run: echo "🎉 Todos os scripts são válidos e o banco foi construído sem erros!"
     
-  deploy-migrations-supabase:
-    name: Deploy to Supabase via Flyway
+  deploy-migrations-dev:
+    name: Deploy to Supabase via Flyway - Dev
     runs-on: ubuntu-22.04
     needs: [migration-test] 
 
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-    
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
+      github.event_name == 'workflow_dispatch'   
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v5.0.1
+
+      - name: Instalar Flyway CLI
+        run: |
+          echo "Baixando e instalando o Flyway versão ${{ env.FLYWAY_VERSION }}..."
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${{ env.FLYWAY_VERSION }}/flyway-commandline-${{ env.FLYWAY_VERSION }}-linux-x64.tar.gz | tar -xvz
+          sudo ln -s $(pwd)/flyway-${{ env.FLYWAY_VERSION }}/flyway /usr/local/bin/flyway
+
+      - name: Executar Deploy no Supabase
+        env:
+          MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
+        run: |
+          echo "Iniciando a migração em produção..."
+          flyway \
+            -url="${{ secrets.SUPABASE_DB_URL }}" \
+            -user="${{ secrets.SUPABASE_DB_USER }}" \
+            -password="${{ secrets.SUPABASE_DB_PASS }}" \
+            -locations="filesystem:$MIGRATIONS_DIR" \
+            -baselineOnMigrate="true" \
+            migrate
+  
+  deploy-migrations-prod:
+    name: Deploy to Supabase via Flyway - Prod
+    runs-on: ubuntu-22.04
+    needs: [migration-test] 
+
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'   
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v5.0.1

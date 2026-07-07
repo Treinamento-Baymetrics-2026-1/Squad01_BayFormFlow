@@ -99,7 +99,10 @@ jobs:
           supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_DEV }}
  
   deploy-prod:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
+    
     needs: code-review
     runs-on: ubuntu-22.04
    
