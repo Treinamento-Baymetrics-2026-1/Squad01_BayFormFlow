@@ -100,7 +100,9 @@ jobs:
           
           for script in "$MIGRATIONS_DIR"/*.sql; do
             echo "Aplicando: $script"
-            psql -h localhost -U ${{ env.DB_TEST_USER }} -d ${{ env.DB_TEST_NAME }} -f "$script"
+            
+            psql -h localhost -U ${{ env.DB_TEST_USER }} -d ${{ env.DB_TEST_NAME }} --set ON_ERROR_STOP=1 -f "$script"
+            
             echo "✅ $script aplicado com sucesso!"
           done
           
