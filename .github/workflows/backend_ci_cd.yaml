@@ -76,8 +76,8 @@ jobs:
  
   deploy-dev:
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
+      github.ref == 'refs/heads/dev' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     needs: code-review
     runs-on: ubuntu-22.04
  
@@ -102,8 +102,8 @@ jobs:
  
   deploy-prod:
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     
     needs: code-review
     runs-on: ubuntu-22.04
