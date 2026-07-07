@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Eye,
   EyeOff,
@@ -31,6 +31,18 @@ export const ModalLogin = () => {
   });
 
   const navigate = useNavigate();
+
+  //verificar se o usuário já logado
+  useEffect(() => {
+    const checkUserSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/visao-geral");
+      }
+    };
+
+    checkUserSession();
+  }, [navigate]);
 
   // controlando o estado do fluxo
   const { mutate, isPending } = useMutation({
