@@ -80,6 +80,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     needs: code-review
     runs-on: ubuntu-22.04
+    environment: Dev
  
     defaults:
       run:
@@ -107,6 +108,7 @@ jobs:
     
     needs: code-review
     runs-on: ubuntu-22.04
+    environment: Production
    
     defaults:
       run:

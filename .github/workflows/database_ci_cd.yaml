@@ -111,6 +111,7 @@ jobs:
     name: Deploy to Supabase via Flyway - Dev
     runs-on: ubuntu-22.04
     needs: [migration-test] 
+    environment: Dev
 
     if: |
       github.ref == 'refs/heads/dev' &&
@@ -143,6 +144,7 @@ jobs:
     name: Deploy to Supabase via Flyway - Prod
     runs-on: ubuntu-22.04
     needs: [migration-test] 
+    environment: Production
 
     if: |
       github.ref == 'refs/heads/main' &&
