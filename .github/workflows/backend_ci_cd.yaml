@@ -75,7 +75,9 @@ jobs:
         run: deno check **/*.ts
  
   deploy-dev:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
     needs: code-review
     runs-on: ubuntu-22.04
  
