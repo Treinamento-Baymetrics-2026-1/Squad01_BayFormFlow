@@ -1,4 +1,4 @@
-import { SurveyTableAdm } from "@/components/AdmProfile/SurveyTableAdm";
+import { SurveyTableAdm } from "@/components/Survey/SurveyTableAdm";
 
 export const SurveyPage = () => {
   return (
