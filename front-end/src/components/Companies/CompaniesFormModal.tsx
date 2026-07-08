@@ -68,8 +68,10 @@ export const CompaniesFormModal = ({
 
   const onSubmit = (data: CompaniesFormData) => {
     if (isEditMode) {
+      // eslint-disable-next-line no-console
       console.log("Salvando modificações:", data);
     } else {
+      // eslint-disable-next-line no-console
       console.log("Cadastrando nova empresa:", data);
     }
     onClose();

@@ -66,8 +66,10 @@ export const UserFormModal = ({
 
   const onSubmit = (data: UserFormData) => {
     if (isEditMode) {
+      // eslint-disable-next-line no-console
       console.log("Salvando modificações:", data);
     } else {
+      // eslint-disable-next-line no-console
       console.log("Cadastrando novo usuário:", data);
     }
     onClose();

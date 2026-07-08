@@ -94,10 +94,12 @@ export const UserTable = () => {
   };
 
   const handleResendTerm = (email: string) => {
+    // eslint-disable-next-line no-console
     console.log(`Reenviando termo para: ${email}`);
   };
 
   const handleToggleStatus = (email: string, currentStatus: string) => {
+    // eslint-disable-next-line no-console
     console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
   };
 

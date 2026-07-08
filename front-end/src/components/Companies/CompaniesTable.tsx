@@ -94,6 +94,7 @@ export const CompaniesTable = () => {
   };
 
   const handleToggleStatus = (email: string, currentStatus: string) => {
+    // eslint-disable-next-line no-console
     console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
   };
 
