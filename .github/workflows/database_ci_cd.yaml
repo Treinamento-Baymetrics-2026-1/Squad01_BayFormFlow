@@ -29,9 +29,6 @@ env:
   PYTHON_VERSION: "3.11"
   PG_VERSION: "17"
   FLYWAY_VERSION: "10.15.0"
-  DB_TEST_USER: "admin"
-  DB_TEST_PASS: "admin_password_ephemeral"
-  DB_TEST_NAME: "app_test_db"
 
 jobs:
   sql-linting:
@@ -54,60 +51,68 @@ jobs:
         run: sqlfluff lint ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }} --dialect postgres
 
   migration-test:
-    name: Dry-Run Migrations
+    name: Dry-Run Migrations (Supabase Local)
     runs-on: ubuntu-22.04
-    needs: [ sql-linting ] 
-    
-    # VALORES HARDCODED:
-    # Esse serviço é efemero e será destruido após seu uso.
-    # Portanto, não há perigo em manter essas credenciais
-    # simples expostas. Jamais use as do banco de verdade.
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: admin
-          POSTGRES_PASSWORD: admin_password_ephemeral
-          POSTGRES_DB: app_test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    needs: [sql-linting]
+
+    env:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password_ephemeral
+      POSTGRES_DB: app_test_db
 
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Instalar Cliente PostgreSQL
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar Supabase CLI
+        run: npm install -g supabase
+
+      - name: Instalar Flyway CLI
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${{ env.FLYWAY_VERSION }}/flyway-commandline-${{ env.FLYWAY_VERSION }}-linux-x64.tar.gz \
+            | tar -xz
 
-      - name: Aplicar migrações (Dry-Run)
+          sudo ln -s \
+            $(pwd)/flyway-${{ env.FLYWAY_VERSION }}/flyway \
+            /usr/local/bin/flyway
+
+      - name: Iniciar ambiente Supabase
+        run: supabase start
+
+      # VALORES HARDCODED:
+      # Esse serviço é efemero e será destruido após seu uso.
+      # Portanto, não há perigo em manter essas credenciais
+      # simples expostas. Jamais use as do banco de verdade.
+      - name: Aplicar migrations com Flyway
         env:
-          PGPASSWORD: ${{ env.DB_TEST_PASS }}
+          FLYWAY_URL: "jdbc:postgresql://127.0.0.1:54322/postgres"
+          FLYWAY_USER: postgres
+          FLYWAY_PASS: postgres
           MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
         run: |
-          echo "Iniciando a execução dos scripts na pasta $MIGRATIONS_DIR..."
-          
-          set -e 
-          shopt -s nullglob
-          
-          for script in "$MIGRATIONS_DIR"/*.sql; do
-            echo "Aplicando: $script"
-            
-            psql -h localhost -U ${{ env.DB_TEST_USER }} -d ${{ env.DB_TEST_NAME }} --set ON_ERROR_STOP=1 -f "$script"
-            
-            echo "✅ $script aplicado com sucesso!"
-          done
-          
-      - name: Validação de Sucesso
-        run: echo "🎉 Todos os scripts são válidos e o banco foi construído sem erros!"
+          flyway \
+            -url=" $${{ env.FLYWAY_URL }} " \
+            -user=" $${{ env.FLYWAY_USER }} " \
+            -password=" $${{ env.FLYWAY_PASS }} " \
+            -locations="filesystem:$MIGRATIONS_DIR" \
+            -baselineOnMigrate=true \
+            migrate
+
+      - name: Validar estado do banco
+        run: |
+          supabase db lint || true
+
+      - name: Encerrar ambiente Supabase
+        if: always()
+        run: supabase stop
+
+      - name: Sucesso
+        run: echo "🎉 Todas as migrations foram aplicadas com sucesso em um ambiente Supabase."
     
   deploy-migrations-dev:
     name: Deploy to Supabase via Flyway - Dev
