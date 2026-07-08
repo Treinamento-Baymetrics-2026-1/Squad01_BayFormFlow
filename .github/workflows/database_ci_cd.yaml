@@ -96,9 +96,9 @@ jobs:
           MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
         run: |
           flyway \
-            -url=" $${{ env.FLYWAY_URL }} " \
-            -user=" $${{ env.FLYWAY_USER }} " \
-            -password=" $${{ env.FLYWAY_PASS }} " \
+            -url="$FLYWAY_URL" \
+            -user="$FLYWAY_USER" \
+            -password="$FLYWAY_PASS" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate=true \
             migrate
