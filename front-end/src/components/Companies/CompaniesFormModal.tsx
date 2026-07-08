@@ -104,7 +104,7 @@ export const CompaniesFormModal = ({
                 className={`w-full h-10 px-3 border rounded-lg text-sm text-black shadow-box-field focus:outline-none placeholder:text-gray-placeholder ${
                   errors.razaoSocial ? "border-feedback-error" : "border-neutral-blue"
                 }`}
-                placeholder="Digite a razão social"
+                placeholder="Digite a razão social da empresa"
                 {...register("razaoSocial")}
               />
               {errors.razaoSocial && (
@@ -123,7 +123,7 @@ export const CompaniesFormModal = ({
                 className={`w-full h-10 px-3 border rounded-lg text-sm text-black shadow-box-field focus:outline-none placeholder:text-gray-placeholder ${
                   errors.nomeFantasia ? "border-feedback-error" : "border-neutral-blue"
                 }`}
-                placeholder="Digite o nome fantasia"
+                placeholder="Digite o nome fantasia da empresa"
                 {...register("nomeFantasia")}
               />
               {errors.nomeFantasia && (
