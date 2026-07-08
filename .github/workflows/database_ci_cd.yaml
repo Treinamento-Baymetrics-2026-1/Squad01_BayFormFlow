@@ -55,9 +55,14 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [sql-linting]
 
+    env:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password_ephemeral
+      POSTGRES_DB: app_test_db
+
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -69,70 +74,45 @@ jobs:
 
       - name: Instalar Flyway CLI
         run: |
-          echo "Baixando Flyway ${{ env.FLYWAY_VERSION }}..."
-          wget -qO- \
-            https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${{ env.FLYWAY_VERSION }}/flyway-commandline-${{ env.FLYWAY_VERSION }}-linux-x64.tar.gz \
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${{ env.FLYWAY_VERSION }}/flyway-commandline-${{ env.FLYWAY_VERSION }}-linux-x64.tar.gz \
             | tar -xz
 
-          chmod +x flyway-${{ env.FLYWAY_VERSION }}/flyway
+          sudo ln -s \
+            $(pwd)/flyway-${{ env.FLYWAY_VERSION }}/flyway \
+            /usr/local/bin/flyway
 
       - name: Iniciar ambiente Supabase
-        run: |
-          supabase start
+        run: supabase start
 
-      - name: Descobrir URL do banco
-        shell: bash
-        run: |
-          set -e
-
-          STATUS=$(supabase status)
-
-          echo "========== Supabase Status =========="
-          echo "$STATUS"
-          echo "====================================="
-
-          DB_URL=$(echo "$STATUS" \
-            | grep "DB URL" \
-            | sed -E 's/.*postgresql:\/\//postgresql:\/\//')
-
-          if [ -z "$DB_URL" ]; then
-            echo "❌ Não foi possível localizar a DB URL."
-            exit 1
-          fi
-
-          SAFE_URL=$(echo "$DB_URL" \
-            | sed -E 's#(postgresql://[^:]+):[^@]+@#\1:********@#')
-
-          echo "Banco Supabase:"
-          echo "$SAFE_URL"
-
-          FLYWAY_URL=$(echo "$DB_URL" \
-            | sed 's#^postgresql://#jdbc:postgresql://#')
-
-          echo "FLYWAY_URL=$FLYWAY_URL" >> "$GITHUB_ENV"
-
+      # VALORES HARDCODED:
+      # Esse serviço é efemero e será destruido após seu uso.
+      # Portanto, não há perigo em manter essas credenciais
+      # simples expostas. Jamais use as do banco de verdade.
       - name: Aplicar migrations com Flyway
         env:
+          FLYWAY_URL: jdbc:postgresql://127.0.0.1:54322/postgres
+          FLYWAY_USER: postgres
+          FLYWAY_PASS: postgres
           MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
         run: |
-          ./flyway-${{ env.FLYWAY_VERSION }}/flyway \
-            -url="$FLYWAY_URL" \
+          flyway \
+            -url=" $${{ env.FLYWAY_URL }} " \
+            -user=" $${{ env.FLYWAY_USER }} " \
+            -password=" $${{ env.FLYWAY_PASS }} " \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate=true \
             migrate
 
-      - name: Validar banco
+      - name: Validar estado do banco
         run: |
           supabase db lint || true
 
       - name: Encerrar ambiente Supabase
         if: always()
-        run: |
-          supabase stop
+        run: supabase stop
 
       - name: Sucesso
-        run: |
-          echo "🎉 Todas as migrations foram aplicadas com sucesso em um ambiente Supabase."
+        run: echo "🎉 Todas as migrations foram aplicadas com sucesso em um ambiente Supabase."
     
   deploy-migrations-dev:
     name: Deploy to Supabase via Flyway - Dev
