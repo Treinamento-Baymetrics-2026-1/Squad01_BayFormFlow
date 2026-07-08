@@ -22,36 +22,42 @@ import { TablePagination } from "../ui/PaginationDefault";
 const empresas = [
   {
     razaoSocial: "Tech Corp",
+    nomeFantasia: "Tech Corp",
     cnpj: "12.345.678/0001-90",
     email: "admin@techcorp.com.br",
     status: "Ativo",
   },
   {
     razaoSocial: "Grupo Delta",
+    nomeFantasia: "Grupo Delta",
     cnpj: "98.765.432/0001-11",
     email: "admin@grupodelta.com.br",
     status: "Ativo",
   },
   {
     razaoSocial: "Indústria Alfa",
+    nomeFantasia: "Indústria Alfa",
     cnpj: "45.678.901/0001-23",
     email: "admin@industriaalfa.com.br",
     status: "Ativo",
   },
   {
     razaoSocial: "Construtora BV",
+    nomeFantasia: "Construtora BV",
     cnpj: "23.456.789/0001-45",
     email: "admin@construtorabv.com.br",
     status: "Ativo",
   },
   {
     razaoSocial: "Metalúrgica SR",
+    nomeFantasia: "Metalúrgica SR",
     cnpj: "87.654.321/0001-67",
     email: "admin@metalurgicasr.com.br",
     status: "Inativo",
   },
   {
     razaoSocial: "Construtora MVM",
+    nomeFantasia: "Construtora MVM",
     cnpj: "34.567.890/0001-89",
     email: "admin@construtoramvm.com.br",
     status: "Inativo",
@@ -60,6 +66,7 @@ const empresas = [
 
 interface Empresa {
   razaoSocial: string;
+  nomeFantasia: string;
   cnpj: string;
   email: string;
   status: string;
@@ -68,21 +75,26 @@ interface Empresa {
 export const CompaniesTable = () => {
   const { currentItems, paginationProps } = usePagination({ data: empresas });
 
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Empresa | null>(null);
+
+  const handleOpenAddModal = () => {
+    setSelectedCompany(null);
+    setIsModalOpen(true);
+  };
 
   const handleEditClick = (empresa: Empresa) => {
     setSelectedCompany(empresa);
-    setIsEditModalOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
     setSelectedCompany(null);
   };
 
   const handleToggleStatus = (email: string, currentStatus: string) => {
+    // eslint-disable-next-line no-console
     console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
   };
 
@@ -92,7 +104,7 @@ export const CompaniesTable = () => {
         <h3 className="font-bold text-2xl text-blue-primary">Empresas</h3>
         <Button
           type="button"
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={handleOpenAddModal}
           className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary shadow-box-field cursor-pointer text-white"
         >
           <Plus size={18} />
@@ -146,7 +158,7 @@ export const CompaniesTable = () => {
 
                 <TableCell className="py-4 px-8 text-center">
                   <span
-                    className={`inline-flex items-center justify-center px-4 py-1 text-sm font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
+                    className={`inline-flex items-center justify-center px-4 py-1 text-xs font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
                   >
                     {item.status}
                   </span>
@@ -192,15 +204,11 @@ export const CompaniesTable = () => {
         <TablePagination {...paginationProps} />
       </div>
 
-      {isEditModalOpen && selectedCompany && (
+      {isModalOpen && (
         <CompaniesFormModal
           empresa={selectedCompany}
-          onClose={handleCloseEditModal}
+          onClose={handleCloseModal}
         />
-      )}
-
-      {isAddModalOpen && (
-        <CompaniesFormModal onClose={() => setIsAddModalOpen(false)} />
       )}
     </div>
   );

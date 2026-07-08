@@ -76,10 +76,11 @@ jobs:
  
   deploy-dev:
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
+      github.ref == 'refs/heads/dev' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     needs: code-review
     runs-on: ubuntu-22.04
+    environment: Dev
  
     defaults:
       run:
@@ -95,18 +96,19 @@ jobs:
  
       - name: Deploy Functions to DEV
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_DEV }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SPBS_ACCESS_TOKEN_DEV }}
         run: |
           # Deploys de todas as functions usando a ref direto no comando
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_DEV }}
+          supabase functions deploy --project-ref ${{ secrets.SPBS_PROJECT_ID_DEV }}
  
   deploy-prod:
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     
     needs: code-review
     runs-on: ubuntu-22.04
+    environment: Production
    
     defaults:
       run:
@@ -122,6 +124,6 @@ jobs:
  
       - name: Deploy Functions to PROD
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SPBS_ACCESS_TOKEN_PROD }}
         run: |
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_PROD }}
+          supabase functions deploy --project-ref ${{ secrets.SPBS_PROJECT_ID_PROD }}

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@/schema/loginSchema";
+import { loginSchema, type LoginFormData } from "@/schema/loginSchema";
 import { useMutation } from "@tanstack/react-query";
 import { loginEdgeFunction } from "@/api/auth";
 import { supabase } from "@/api/supabase";
@@ -69,7 +69,7 @@ export const ModalLogin = () => {
     },
   });
 
-  const handleLogin = (formData: any) => {
+  const handleLogin = (formData: LoginFormData) => {
     setLoginError(false);
     setLoginSuccess(false);
     mutate({ email: formData.email, password: formData.password });
@@ -152,12 +152,11 @@ export const ModalLogin = () => {
                 </span>
               )}
               <div className="text-right mt-3">
-                <a
-                  href="#"
+                <button
                   className="font-semibold text-sm leading-none text-right text-blue-primary"
                 >
                   Esqueceu sua senha?
-                </a>
+                </button>
               </div>
             </div>
 

@@ -30,14 +30,14 @@ const usuarios = [
   {
     nome: "Daiane da Silva",
     email: "daiane@baymetrics.com",
-    perfil: "Gestor",
+    perfil: "Gestor Interno",
     status: "Ativo",
     termo: "Pendente",
   },
   {
     nome: "Márcia Moreira",
     email: "marcia@baymetrics.com",
-    perfil: "Gestor",
+    perfil: "Gestor Interno",
     status: "Ativo",
     termo: "Pendente",
   },
@@ -51,14 +51,14 @@ const usuarios = [
   {
     nome: "Pedro Ferreira Moreno",
     email: "pedro@baymetrics.com",
-    perfil: "Validador",
+    perfil: "Validador Operacional",
     status: "Inativo",
     termo: "Pendente",
   },
   {
     nome: "João Melônio Melo",
     email: "joão@baymetrics.com",
-    perfil: "Validador",
+    perfil: "Validador Operacional",
     status: "Inativo",
     termo: "Pendente",
   },
@@ -73,30 +73,33 @@ interface Usuario {
 }
 
 export const UserTable = () => {
-  const {
-    currentItems, paginationProps
-  } = usePagination({ data: usuarios}); // , initialItemsPerPage: 2 (alterar itens por páginas apenas nessa tela (padrão 6))
+  const { currentItems, paginationProps } = usePagination({ data: usuarios }); // , initialItemsPerPage: 2 (alterar itens por páginas apenas nessa tela (padrão 6))
 
-  // Estados para controle dos Modais
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+
+  const handleOpenAddModal = () => {
+    setSelectedUser(null);
+    setIsModalOpen(true);
+  };
 
   const handleEditClick = (usuario: Usuario) => {
     setSelectedUser(usuario);
-    setIsEditModalOpen(true);
+    setIsModalOpen(true);
   };
 
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
     setSelectedUser(null);
   };
 
   const handleResendTerm = (email: string) => {
+    // eslint-disable-next-line no-console
     console.log(`Reenviando termo para: ${email}`);
   };
 
   const handleToggleStatus = (email: string, currentStatus: string) => {
+    // eslint-disable-next-line no-console
     console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
   };
 
@@ -106,7 +109,7 @@ export const UserTable = () => {
         <h3 className="font-bold text-2xl text-blue-primary">Usuários</h3>
         <Button
           type="button"
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={handleOpenAddModal}
           className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary shadow-box-field cursor-pointer text-white"
         >
           <UserPlus size={18} />
@@ -163,7 +166,9 @@ export const UserTable = () => {
 
                 <TableCell className="py-4 text-center">
                   <span
-                    className={`inline-flex items-center justify-center px-4 py-1 text-sm font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
+                    className={`inline-flex items-center justify-center px-4 py-1 text-sm font-medium rounded-full w-24 h-7 ${getStatusStyles(
+                      item.status,
+                    )}`}
                   >
                     {item.status}
                   </span>
@@ -219,14 +224,8 @@ export const UserTable = () => {
         <TablePagination {...paginationProps} />
       </div>
 
-      {/* Quando clicar em Editar */}
-      {isEditModalOpen && selectedUser && (
-        <UserFormModal usuario={selectedUser} onClose={handleCloseEditModal} />
-      )}
-
-      {/* Quando clicar em Novo Usuário (UserPlus) */}
-      {isAddModalOpen && (
-        <UserFormModal onClose={() => setIsAddModalOpen(false)} />
+      {isModalOpen && (
+        <UserFormModal usuario={selectedUser} onClose={handleCloseModal} />
       )}
     </div>
   );

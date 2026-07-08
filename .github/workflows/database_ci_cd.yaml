@@ -111,10 +111,11 @@ jobs:
     name: Deploy to Supabase via Flyway - Dev
     runs-on: ubuntu-22.04
     needs: [migration-test] 
+    environment: Dev
 
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
-      github.event_name == 'workflow_dispatch'   
+      github.ref == 'refs/heads/dev' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')  
 
     steps:
       - name: Checkout do código
@@ -132,9 +133,9 @@ jobs:
         run: |
           echo "Iniciando a migração em produção..."
           flyway \
-            -url="${{ secrets.SUPABASE_DB_URL }}" \
-            -user="${{ secrets.SUPABASE_DB_USER }}" \
-            -password="${{ secrets.SUPABASE_DB_PASS }}" \
+            -url="${{ secrets.SPBS_DB_URL_DEV }}" \
+            -user="${{ secrets.SPBS_DB_USER_DEV }}" \
+            -password="${{ secrets.SPBS_DB_PASS_DEV }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate="true" \
             migrate
@@ -143,10 +144,11 @@ jobs:
     name: Deploy to Supabase via Flyway - Prod
     runs-on: ubuntu-22.04
     needs: [migration-test] 
+    environment: Production
 
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'   
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
 
     steps:
       - name: Checkout do código
@@ -164,9 +166,9 @@ jobs:
         run: |
           echo "Iniciando a migração em produção..."
           flyway \
-            -url="${{ secrets.SUPABASE_DB_URL }}" \
-            -user="${{ secrets.SUPABASE_DB_USER }}" \
-            -password="${{ secrets.SUPABASE_DB_PASS }}" \
+            -url="${{ secrets.SPBS_DB_URL_PROD }}" \
+            -user="${{ secrets.SPBS_DB_USER_PROD }}" \
+            -password="${{ secrets.SPBS_DB_PASS_PROD }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate="true" \
             migrate

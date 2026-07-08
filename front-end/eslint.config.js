@@ -26,8 +26,6 @@ export default tseslint.config(
 
   react.configs.flat.recommended,
 
-  reactHooks.configs.flat.recommended,
-
   reactRefresh.configs.vite,
 
   {
@@ -51,6 +49,7 @@ export default tseslint.config(
     plugins: {
       import: importPlugin,
       "jsx-a11y": jsxA11y,
+      "react-hooks": reactHooks,
     },
 
     settings: {
@@ -105,7 +104,7 @@ export default tseslint.config(
 
       /*
        * ======================
-       * React
+       * React & React Hooks
        * ======================
        */
 
@@ -120,6 +119,14 @@ export default tseslint.config(
       "react/self-closing-comp": "warn",
 
       "react/jsx-no-useless-fragment": "warn",
+
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
 
       /*
        * ======================

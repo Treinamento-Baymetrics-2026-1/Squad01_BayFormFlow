@@ -1,12 +1,15 @@
-import React, { useState } from "react";
-import { X, CircleCheckBig, ChevronDown } from "lucide-react";
+import { useEffect } from "react";
+import { X, CircleCheckBig, ChevronDown, TriangleAlert } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userFormSchema } from "@/schema/userFormSchema";
+import type { UserFormData } from "@/schema/userFormSchema";
 
 interface Usuario {
   nome: string;
   email: string;
   perfil: string;
   status: string;
-  termo: string;
 }
 
 interface UserFormModalProps {
@@ -21,18 +24,53 @@ export const UserFormModal = ({
   // Identifica dinamicamente se é o modo de edição
   const isEditMode = !!usuario;
 
-  // Estados iniciais baseados no modo (Edição ou Cadastro)
-  const [nome, setNome] = useState(usuario?.nome ?? "");
-  const [email, setEmail] = useState(usuario?.email ?? "");
-  const [perfil, setPerfil] = useState(usuario?.perfil ?? "");
-  const [status, setStatus] = useState(usuario?.status ?? "Ativo");
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(userFormSchema),
+    defaultValues: {
+      nome: usuario?.nome ?? "",
+      email: usuario?.email ?? "",
+      perfil: usuario?.perfil ?? "",
+      status: (usuario?.status as "Ativo" | "Inativo") ?? "Ativo",
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isEditMode) {
-      console.log("Salvando modificações:", { nome, email, perfil, status });
+  // alterações de status para estilizar o botão customizado
+  const currentStatus = watch("status");
+
+  // altera campos do form quando abrir em modo edição ou resetar para add (reset)
+  useEffect(() => {
+    if (usuario) {
+      reset({
+        nome: usuario.nome,
+        email: usuario.email,
+        perfil: usuario.perfil,
+        status: usuario.status as "Ativo" | "Inativo",
+      });
     } else {
-      console.log("Cadastrando novo usuário:", { nome, email, perfil });
+      //se for null, deixa o form vazio
+      reset({
+        nome: "",
+        email: "",
+        perfil: "",
+        status: "Ativo",
+      });
+    }
+  }, [usuario, reset]);
+
+  const onSubmit = (data: UserFormData) => {
+    if (isEditMode) {
+      // eslint-disable-next-line no-console
+      console.log("Salvando modificações:", data);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log("Cadastrando novo usuário:", data);
     }
     onClose();
   };
@@ -46,6 +84,7 @@ export const UserFormModal = ({
             {isEditMode ? "Editar usuário" : "Novo usuário"}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="border border-gray-light-placeholder-secondary rounded-lg shadow-box-field cursor-pointer mb-6 p-2"
           >
@@ -54,7 +93,7 @@ export const UserFormModal = ({
         </div>
 
         {/* Formulário Compartilhado */}
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
           {/* Nome completo */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
@@ -62,41 +101,57 @@ export const UserFormModal = ({
             </label>
             <input
               type="text"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="w-full h-9 px-3 border border-neutral-blue rounded-md text-sm text-black shadow-box-field "
+              className={`w-full h-9 px-3 border rounded-md text-sm text-black shadow-box-field ${
+                errors.nome ? "border-feedback-error" : "border-neutral-blue"
+              }`}
               placeholder="Digite o nome completo do usuário"
+              {...register("nome")}
             />
+            {errors.nome && (
+              <span className="text-xs text-feedback-error font-medium flex items-center gap-1">
+                <TriangleAlert size={14} />
+                {errors.nome.message}
+              </span>
+            )}
           </div>
 
           {/* E-mail e Perfil lado a lado */}
           <div className="grid grid-cols-2 gap-4">
+            {/* E-mail */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-foreground">
                 E-mail
               </label>
               <input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-9 px-3 border border-neutral-blue rounded-md text-sm text-black shadow-box-field"
+                className={`w-full h-9 px-3 border rounded-md text-sm text-black shadow-box-field ${
+                  errors.email ? "border-feedback-error" : "border-neutral-blue"
+                }`}
                 placeholder="Digite o e-mail do usuário"
+                {...register("email")}
               />
+              {errors.email && (
+                <span className="text-xs text-feedback-error font-medium flex items-center gap-1">
+                  <TriangleAlert size={14} />
+                  {errors.email.message}
+                </span>
+              )}
             </div>
 
+            {/* Perfil */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium text-foreground">
                 Perfil
               </label>
-
-              {/* container Relativo */}
               <div className="relative w-full">
                 <select
-                  value={perfil}
-                  onChange={(e) => setPerfil(e.target.value)}
-                  className={`w-full h-9 pl-3 pr-10 border border-neutral-blue  rounded-md text-sm bg-white shadow-box-field appearance-none ${
-                    perfil === "" ? "text-gray-placeholder" : "text-black"
+                  defaultValue=""
+                  className={`w-full h-9 pl-3 pr-10 border rounded-md text-sm bg-white shadow-box-field appearance-none ${
+                    errors.perfil
+                      ? "border-feedback-error"
+                      : "border-neutral-blue"
                   }`}
+                  {...register("perfil")}
                 >
                   <option value="" disabled hidden>
                     Selecione o perfil do usuário
@@ -115,11 +170,16 @@ export const UserFormModal = ({
                   </option>
                 </select>
 
-                {/* Ícone */}
                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
                   <ChevronDown size={16} />
                 </div>
               </div>
+              {errors.perfil && (
+                <span className="text-xs text-feedback-error font-medium flex items-center gap-1">
+                  <TriangleAlert size={14} />
+                  {errors.perfil.message}
+                </span>
+              )}
             </div>
           </div>
 
@@ -132,27 +192,27 @@ export const UserFormModal = ({
               <div className="grid grid-cols-2 p-1 bg-white h-9">
                 <button
                   type="button"
-                  onClick={() => setStatus("Ativo")}
+                  onClick={() => setValue("status", "Ativo")}
                   className={`flex items-center justify-center gap-1 text-xs font-medium rounded-l-md border border-r-0 border-neutral-blue transition-all cursor-pointer ${
-                    status === "Ativo"
+                    currentStatus === "Ativo"
                       ? "bg-status-active-light text-status-active shadow-box-field"
                       : "text-black"
                   }`}
                 >
-                  {status === "Ativo" && <CircleCheckBig size={14} />}
+                  {currentStatus === "Ativo" && <CircleCheckBig size={14} />}
                   Ativo
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setStatus("Inativo")}
-                  className={`flex items-center justify-center gap-1 text-xs font-medium rounded-r-md border border-neutral-blue  transition-all cursor-pointer ${
-                    status === "Inativo"
+                  onClick={() => setValue("status", "Inativo")}
+                  className={`flex items-center justify-center gap-1 text-xs font-medium rounded-r-md border border-neutral-blue transition-all cursor-pointer ${
+                    currentStatus === "Inativo"
                       ? "bg-neutral-blue text-status-disabled shadow-box-field"
                       : "text-black"
                   }`}
                 >
-                  {status === "Inativo" && <CircleCheckBig size={14} />}
+                  {currentStatus === "Inativo" && <CircleCheckBig size={14} />}
                   Inativo
                 </button>
               </div>

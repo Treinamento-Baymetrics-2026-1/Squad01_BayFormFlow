@@ -1,4 +1,6 @@
 import { useState } from "react";
+
+
 interface UsePaginationProps<T> {
   data: T[];
   initialItemsPerPage?: number;
@@ -19,15 +21,21 @@ export function usePagination<T>({
   const currentItems = data.slice(startIndex, endIndex);
 
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   //spread na chamada do componente
