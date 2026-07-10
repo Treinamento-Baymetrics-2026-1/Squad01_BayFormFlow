@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS consultancies.t_answers (
         SEQUENCE NAME consultancies_t_answers_id_seq
     ),
     answer_status   consultancies.answer_status NOT NULL DEFAULT 'Pendente',
-    structure       JSONB                       NOT NULL,
+    answers         JSONB                       NOT NULL,
     answered_at     TIMESTAMPTZ                 NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     created_at      TIMESTAMPTZ                 NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     form_version_id UUID                        NOT NULL,

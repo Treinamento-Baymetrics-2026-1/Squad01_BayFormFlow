@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS consultancies.t_form_versions (
     id              UUID                            NOT NULL DEFAULT extensions.gen_random_uuid(),
-    structure       JSONB                           NOT NULL,
-    link            VARCHAR(2048),
+    form            JSONB                           NOT NULL,
+    form_link       VARCHAR(2048)                   NULL,
     version_status  consultancies.version_status    NOT NULL,
     version_name    VARCHAR(10)                     NOT NULL,
     form_id         UUID                            NOT NULL,
