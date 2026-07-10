@@ -1,11 +1,13 @@
 CREATE TABLE IF NOT EXISTS consultancies.t_form_versions (
-    id              UUID                            NOT NULL DEFAULT extensions.gen_random_uuid(),
+    id              UUID                            NOT NULL    DEFAULT extensions.gen_random_uuid(),
     form            JSONB                           NOT NULL,
-    form_link       VARCHAR(2048)                   NULL,
+    form_link       VARCHAR(46)                     NULL        GENERATED ALWAYS AS (
+        form_id || '-' || version_name
+    ) STORED,
     version_status  consultancies.version_status    NOT NULL,
     version_name    VARCHAR(10)                     NOT NULL,
+    created_at      TIMESTAMPTZ                     NOT NULL    DEFAULT CURRENT_TIMESTAMP(0),
     form_id         UUID                            NOT NULL,
-    created_at      TIMESTAMPTZ                     NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     clone_of        UUID                            NULL,
     created_by      UUID                            NOT NULL,
     

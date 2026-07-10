@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS consultancies.t_forms (
     display_name        VARCHAR(120)                NOT NULL,
     forms_description   VARCHAR(2000)               NOT NULL,
     time_period         TSTZRANGE                   NOT NULL,
-    forms_status        consultancies.form_status   NOT NULL DEFAULT 'Criado',
+    form_status         consultancies.form_status   NOT NULL DEFAULT 'Criado',
     participant_target  SMALLINT                    NOT NULL,
     published_at        TIMESTAMPTZ                 NULL,             
     created_at          TIMESTAMPTZ                 NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
@@ -33,12 +33,13 @@ CREATE TABLE IF NOT EXISTS consultancies.t_forms (
         ),
     CONSTRAINT consultancies_t_forms_ck_participant_target
         CHECK (participant_target > 0),
-    CONSTRAINT consultancies_t_forms_ck_created_at
-        CHECK (created_at <= CURRENT_TIMESTAMP(0)),
-    CONSTRAINT consultancies_t_forms_ck_updated_at
-        CHECK (updated_at <= CURRENT_TIMESTAMP(0)),
-    CONSTRAINT consultancies_t_forms_ck_deleted_at
-        CHECK (deleted_at <= CURRENT_TIMESTAMP(0)),
+
+    CONSTRAINT consultancies_t_forms_ck_is_deleted
+        CHECK(
+            (is_deleted = FALSE AND deleted_at IS NULL)
+            OR
+            (is_deleted = TRUE AND deleted_at IS NOT NULL)
+        ),
     
     --FKs
     CONSTRAINT consultancies_t_forms_fk_research_id
