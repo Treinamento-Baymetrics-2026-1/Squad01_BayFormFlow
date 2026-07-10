@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS consultancies.t_forms (
         CHECK(
             forms_description ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
         ),
-    CONSTRAINT consultancies_t_forms_ck_research_period
+    CONSTRAINT consultancies_t_forms_ck_time_period
         CHECK(
-            LOWER(research_period) < UPPER(research_period)
+            LOWER(time_period) < UPPER(time_period)
         ),
     CONSTRAINT consultancies_t_forms_ck_participant_target
         CHECK (participant_target > 0),
