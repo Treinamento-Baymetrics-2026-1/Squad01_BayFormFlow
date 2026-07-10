@@ -10,6 +10,10 @@ enabled = true
 port = 54321
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
 # endpoints. `public` and `graphql_public` schemas are included by default.
+# logins/consultants/requesters expostos p/ a saga da Edge Function `auth`
+# (insert direto via supabase-js). ATENÇÃO: só suba com esta linha se os schemas
+# JÁ existirem no banco (Flyway rodado); senão o PostgREST falha o health check
+# (503) e o `supabase start` aborta.
 schemas = ["public", "graphql_public"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions"]
@@ -64,7 +68,8 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
+# Desabilitado: a seed do 1º admin virou migration Flyway (V010), que roda na
+# ordem certa (depois das tabelas). O CLI executava ./seed.sql ANTES do Flyway.
 enabled = false
 
 [db.network_restrictions]
@@ -383,7 +388,10 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+# Desabilitado: no Windows/Docker Desktop o serviço `vector` fica em crash-loop
+# (não alcança o socket do Docker) e trava o `supabase start` esperando health.
+# Custo: sem visualizador de Logs no Studio. Reative se precisar dos logs.
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
@@ -409,13 +417,10 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
 
-[functions.provision-operator]
+[functions.auth]
 enabled = true
+# A própria função autoriza via me() (401 sem header, 403 não-admin), então o
+# gateway não precisa verificar o JWT.
 verify_jwt = false
-import_map = "./functions/provision-operator/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/provision-operator/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/provision-operator/*.html" ]
+import_map = "./functions/auth/deno.json"
+entrypoint = "./functions/auth/index.ts"
