@@ -13,89 +13,84 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LucideEdit, LucideEllipsis, UserPlus } from "lucide-react";
+import { Plus, LucideEdit, LucideEllipsis } from "lucide-react";
 import { Button } from "../ui/button";
 import { usePagination } from "@/hooks/usePagination";
-import { UserFormModal } from "./UserFormModal";
+import { CompaniesFormModal } from "./CompaniesFormModal";
 import { TablePagination } from "../ui/PaginationDefault";
 
-const usuarios = [
+const empresas = [
   {
-    nome: "Joana Mota",
-    email: "joana@baymetrics.com",
-    perfil: "Administrador",
+    razaoSocial: "Tech Corp",
+    nomeFantasia: "Tech Corp",
+    cnpj: "12.345.678/0001-90",
+    email: "admin@techcorp.com.br",
     status: "Ativo",
-    termo: "Aceito",
   },
   {
-    nome: "Daiane da Silva",
-    email: "daiane@baymetrics.com",
-    perfil: "Gestor Interno",
+    razaoSocial: "Grupo Delta",
+    nomeFantasia: "Grupo Delta",
+    cnpj: "98.765.432/0001-11",
+    email: "admin@grupodelta.com.br",
     status: "Ativo",
-    termo: "Pendente",
   },
   {
-    nome: "Márcia Moreira",
-    email: "marcia@baymetrics.com",
-    perfil: "Gestor Interno",
+    razaoSocial: "Indústria Alfa",
+    nomeFantasia: "Indústria Alfa",
+    cnpj: "45.678.901/0001-23",
+    email: "admin@industriaalfa.com.br",
     status: "Ativo",
-    termo: "Pendente",
   },
   {
-    nome: "Diego Nunes de Albuquerque",
-    email: "diego@baymetrics.com",
-    perfil: "Administrador",
+    razaoSocial: "Construtora BV",
+    nomeFantasia: "Construtora BV",
+    cnpj: "23.456.789/0001-45",
+    email: "admin@construtorabv.com.br",
     status: "Ativo",
-    termo: "Aceito",
   },
   {
-    nome: "Pedro Ferreira Moreno",
-    email: "pedro@baymetrics.com",
-    perfil: "Validador Operacional",
+    razaoSocial: "Metalúrgica SR",
+    nomeFantasia: "Metalúrgica SR",
+    cnpj: "87.654.321/0001-67",
+    email: "admin@metalurgicasr.com.br",
     status: "Inativo",
-    termo: "Pendente",
   },
   {
-    nome: "João Melônio Melo",
-    email: "joão@baymetrics.com",
-    perfil: "Validador Operacional",
+    razaoSocial: "Construtora MVM",
+    nomeFantasia: "Construtora MVM",
+    cnpj: "34.567.890/0001-89",
+    email: "admin@construtoramvm.com.br",
     status: "Inativo",
-    termo: "Pendente",
   },
 ];
 
-interface Usuario {
-  nome: string;
+interface Empresa {
+  razaoSocial: string;
+  nomeFantasia: string;
+  cnpj: string;
   email: string;
-  perfil: string;
   status: string;
-  termo: string;
 }
 
-export const UserTable = () => {
-  const { currentItems, paginationProps } = usePagination({ data: usuarios }); // , initialItemsPerPage: 2 (alterar itens por páginas apenas nessa tela (padrão 6))
+export const CompaniesTable = () => {
+  const { currentItems, paginationProps } = usePagination({ data: empresas });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<Empresa | null>(null);
 
   const handleOpenAddModal = () => {
-    setSelectedUser(null);
+    setSelectedCompany(null);
     setIsModalOpen(true);
   };
 
-  const handleEditClick = (usuario: Usuario) => {
-    setSelectedUser(usuario);
+  const handleEditClick = (empresa: Empresa) => {
+    setSelectedCompany(empresa);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedUser(null);
-  };
-
-  const handleResendTerm = (email: string) => {
-    // eslint-disable-next-line no-console
-    console.log(`Reenviando termo para: ${email}`);
+    setSelectedCompany(null);
   };
 
   const handleToggleStatus = (email: string, currentStatus: string) => {
@@ -106,19 +101,19 @@ export const UserTable = () => {
   return (
     <div className="w-full px-16 py-17.5">
       <div className="flex justify-between items-center w-full">
-        <h3 className="font-bold text-2xl text-blue-primary">Usuários</h3>
+        <h3 className="font-bold text-2xl text-blue-primary">Empresas</h3>
         <Button
           type="button"
           onClick={handleOpenAddModal}
           className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary shadow-box-field cursor-pointer text-white"
         >
-          <UserPlus size={18} />
-          Novo usuário
+          <Plus size={18} />
+          Nova empresa
         </Button>
       </div>
       <div>
         <p className="font-normal text-base leading-6 tracking-normal text-gray-placeholder">
-          Gestão dos usuários da plataforma
+          Gestão das empresas clientes contratantes
         </p>
       </div>
       <div className="w-full overflow-hidden rounded-xl border border-neutral-blue mt-22.25">
@@ -126,19 +121,16 @@ export const UserTable = () => {
           <TableHeader className="bg-blue-primary">
             <TableRow className="hover:bg-transparent border-none">
               <TableHead className="text-white font-medium py-4 px-6 text-left">
-                Nome do usuário
+                Razão social
+              </TableHead>
+              <TableHead className="text-white font-medium py-4 px-10 text-left">
+                CNPJ
               </TableHead>
               <TableHead className="text-white font-medium py-4 text-left">
                 E-mail
               </TableHead>
               <TableHead className="text-white font-medium py-4 text-center">
-                Perfil
-              </TableHead>
-              <TableHead className="text-white font-medium py-4 text-center">
                 Status
-              </TableHead>
-              <TableHead className="text-white font-medium py-4 text-center">
-                Termo de responsabilidade
               </TableHead>
               <TableHead className="text-white font-medium py-4 text-center">
                 Ações
@@ -154,29 +146,25 @@ export const UserTable = () => {
                   index % 2 !== 1 ? "bg-gray-light-placeholder" : "bg-white"
                 }`}
               >
-                <TableCell className="text-black font-medium py-4 px-6 text-left">
-                  {item.nome}
+                <TableCell className="text-black py-4 px-6 text-left">
+                  {item.razaoSocial}
+                </TableCell>
+                <TableCell className="text-black py-4 px-10 text-left">
+                  {item.cnpj}
                 </TableCell>
                 <TableCell className="text-black py-4 text-left">
                   {item.email}
                 </TableCell>
-                <TableCell className="text-black py-4 text-center">
-                  {item.perfil}
-                </TableCell>
 
-                <TableCell className="py-4 text-center">
+                <TableCell className="py-4 px-8 text-center">
                   <span
-                    className={`inline-flex items-center justify-center px-4 py-1 text-sm font-medium rounded-full w-24 h-7 ${getStatusStyles(
-                      item.status,
-                    )}`}
+                    className={`inline-flex items-center justify-center px-4 py-1 text-xs font-medium rounded-full w-24 h-7 ${getStatusStyles(item.status)}`}
                   >
                     {item.status}
                   </span>
                 </TableCell>
-                <TableCell className="text-black py-4 text-center">
-                  {item.termo}
-                </TableCell>
-                <TableCell className="py-4 text-center whitespace-nowrap">
+
+                <TableCell className="py-4 px-8 text-center whitespace-nowrap">
                   <button
                     onClick={() => handleEditClick(item)}
                     className="inline-flex items-center justify-center px-1.5 hover:cursor-pointer text-blue-primary"
@@ -186,22 +174,15 @@ export const UserTable = () => {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="inline-flex items-center justify-center px-1.5 cursor-pointer">
+                      <button className="inline-flex items-center justify-center px-1.5 cursor-pointer text-black">
                         <LucideEllipsis size={18} />
                       </button>
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent
                       align="end"
-                      className="rounded-md border shadow-box-field gap-2 p-1 min-w-52.75 min-h-20 bg-white"
+                      className="rounded-md border shadow-box-field gap-2 p-1 min-w-52.75 bg-white"
                     >
-                      <DropdownMenuItem
-                        onClick={() => handleResendTerm(item.email)}
-                        className="cursor-pointer text-sm font-medium text-accent-foreground py-2 px-4 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
-                      >
-                        Reenviar termo
-                      </DropdownMenuItem>
-
                       <DropdownMenuItem
                         onClick={() =>
                           handleToggleStatus(item.email, item.status)
@@ -209,8 +190,8 @@ export const UserTable = () => {
                         className="cursor-pointer text-sm font-medium py-2 px-4 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-accent-foreground"
                       >
                         {item.status === "Ativo"
-                          ? "Desativar usuário"
-                          : "Ativar usuário"}
+                          ? "Desativar Empresa"
+                          : "Ativar Empresa"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -220,12 +201,14 @@ export const UserTable = () => {
           </TableBody>
         </Table>
 
-        {/* Componente de paginação (ui/PaginationDefault.tsx) */}
         <TablePagination {...paginationProps} />
       </div>
 
       {isModalOpen && (
-        <UserFormModal usuario={selectedUser} onClose={handleCloseModal} />
+        <CompaniesFormModal
+          empresa={selectedCompany}
+          onClose={handleCloseModal}
+        />
       )}
     </div>
   );
