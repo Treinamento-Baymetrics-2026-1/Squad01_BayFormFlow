@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS consultancies.t_answers (
         SEQUENCE NAME consultancies_t_answers_id_seq
     ),
     answer_status   consultancies.answer_status NOT NULL DEFAULT 'Pendente',
-    answers         JSONB                       NOT NULL,
+    answer          JSONB                       NOT NULL,
     answered_at     TIMESTAMPTZ                 NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     created_at      TIMESTAMPTZ                 NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     form_version_id UUID                        NOT NULL,
@@ -19,16 +19,6 @@ CREATE TABLE IF NOT EXISTS consultancies.t_answers (
     --PKs
     CONSTRAINT consultancies_t_answers_pk PRIMARY KEY (id),
 
-    --CHECKS
-    CONSTRAINT consultancies_t_answers_ck_answered_at
-        CHECK(
-            answered_at <= CURRENT_TIMESTAMP(0)
-        ),
-    CONSTRAINT consultancies_t_answers_ck_created_at
-        CHECK(
-            created_at <= CURRENT_TIMESTAMP(0)
-        ),
-
     --FKs
     CONSTRAINT consultancies_t_answers_fk_form_version_id
         FOREIGN KEY (form_version_id) REFERENCES consultancies.t_form_versions(id),
@@ -38,5 +28,4 @@ CREATE TABLE IF NOT EXISTS consultancies.t_answers (
         FOREIGN KEY (participant_id) REFERENCES requesters.t_participants(id),
     CONSTRAINT consultancies_t_answers_fk_validated_by
         FOREIGN KEY (validated_by) REFERENCES consultants.t_employees(id)
-    
 );

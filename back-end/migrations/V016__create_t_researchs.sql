@@ -44,17 +44,11 @@ CREATE TABLE IF NOT EXISTS consultancies.t_researchs (
             OR 
             (is_periodic = TRUE AND period_interval IS NOT NULL)
         ),
-    CONSTRAINT consultancies_t_researchs_ck_created_at
-        CHECK (
-            created_at <= CURRENT_TIMESTAMP(0)
-        ),
-    CONSTRAINT consultancies_t_researchs_ck_updated_at
-        CHECK (
-            updated_at <= CURRENT_TIMESTAMP(0)
-        ),
-    CONSTRAINT consultancies_t_researchs_ck_deleted_at
-        CHECK (
-            deleted_at <= CURRENT_TIMESTAMP(0)
+    CONSTRAINT consultancies_t_researchs_ck_is_deleted
+        CHECK(
+            (is_deleted = FALSE AND deleted_at IS NULL)
+            OR
+            (is_deleted = TRUE AND deleted_at IS NOT NULL)
         ),
 
     --FKs
