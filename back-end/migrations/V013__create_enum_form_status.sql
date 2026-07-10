@@ -1,4 +1,5 @@
-DO $$ BEGIN
+DO $$ 
+BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_type
         JOIN pg_namespace 
