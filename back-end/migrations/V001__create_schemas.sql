@@ -8,6 +8,6 @@ CREATE SCHEMA IF NOT EXISTS logs;
 CREATE SCHEMA IF NOT EXISTS helpers;
 
 -- Extensions
-CREATE SCHEMA IF NOT EXISTS ext_pgcrypto;
+CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS pgcrypto
-    WITH SCHEMA ext_pgcrypto;
+    WITH SCHEMA extensions;

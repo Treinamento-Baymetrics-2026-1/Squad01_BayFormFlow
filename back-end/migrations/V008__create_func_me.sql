@@ -18,6 +18,7 @@ BEGIN
       FROM consultants.t_employees AS e
      WHERE e.user_id = v_user_id
      LIMIT 1;
+
  
     RETURN jsonb_build_object(
         'user_id',  v_user_id,
