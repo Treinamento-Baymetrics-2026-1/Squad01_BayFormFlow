@@ -10,8 +10,6 @@ CREATE TABLE IF NOT EXISTS consultancies.t_researchs (
     display_name            VARCHAR(120)                    NOT NULL,
     research_description    VARCHAR(2000)                   NOT NULL,
     research_period         TSTZRANGE                       NOT NULL,
-    is_periodic             BOOLEAN                         NOT NULL DEFAULT FALSE,
-    period_interval         SMALLINT                        NULL,
     research_status         consultancies.research_status   NOT NULL DEFAULT 'Criado',
     created_at              TIMESTAMPTZ                     NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     updated_at              TIMESTAMPTZ                     NULL,
