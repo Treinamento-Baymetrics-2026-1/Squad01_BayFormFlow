@@ -28,8 +28,15 @@
   --color-black: #000000;
   --color-foreground: #0A0A0A;
 
+  --color-accent-foreground: #171717;
+
   --color-progress-none: #003554;
 
+
+  --color-status-active: #047857;
+  --color-status-active-light: #CFFFE0;
+
+  --color-status-disabled: #475569;
 
   --color-status-canceled-light: #FEE2E2;
   --color-status-canceled: #991B1B;
@@ -46,6 +53,7 @@
 
 
   --color-feedback-error: #C62828;
+  --colors-feedback-error-light: #F7EBEB;
 
   /* sombra padrão */
   --shadow-box-field: 0px 2px 10px 0px #0000001A;

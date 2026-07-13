@@ -1,16 +1,16 @@
 name: Edge Functions CI/CD
-
+ 
 on:
   push:
     branches: [ dev, main ]
     paths:
       - 'back-end/supabase/functions/**'
-
+ 
   pull_request:
     branches: [ dev, main ]
     paths:
       - 'back-end/supabase/functions/**'
-
+ 
   workflow_dispatch:
     inputs:
       functions_path:
@@ -18,25 +18,25 @@ on:
         required: false
         default: 'back-end/supabase/functions'
         type: string
-
+ 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
+ 
 permissions:
   contents: read
-
+ 
 env:
   EDGE_FUNCTIONS_PATH: ${{ github.event.inputs.functions_path || 'back-end/supabase/functions' }}
-
+ 
 jobs:
   code-review:
     name: Code Review - Lint & Test & Check
     runs-on: ubuntu-22.04
-
+ 
     steps:
       - uses: actions/checkout@v5.0.1
-
+ 
       - name: Setup Deno
         uses: denoland/setup-deno@v2.0.4
         with:
@@ -60,7 +60,7 @@ jobs:
           else
             echo "HAS_TESTS=false" >> $GITHUB_ENV
           fi
-
+ 
       - name: Run tests
         if: env.HAS_TESTS == 'true'
         working-directory: ${{ env.EDGE_FUNCTIONS_PATH }}
@@ -69,54 +69,61 @@ jobs:
       - name: Skip tests
         if: env.HAS_TESTS == 'false'
         run: echo "Nenhum teste encontrado. Pulando etapa de testes."
-
+ 
       - name: Type check
         working-directory: ${{ env.EDGE_FUNCTIONS_PATH }}
         run: deno check **/*.ts
 
   deploy-dev:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    if: |
+      github.ref == 'refs/heads/dev' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
     needs: code-review
     runs-on: ubuntu-22.04
-
-    defaults:
-      run:
-        working-directory: ./back-end 
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Deploy Functions to DEV
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_DEV }}
-        run: |
-          # Deploys de todas as functions usando a ref direto no comando
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_DEV }}
-
-  deploy-prod:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: code-review
-    runs-on: ubuntu-22.04
-    
+    environment: Dev
+ 
     defaults:
       run:
         working-directory: ./back-end
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: latest
-
+ 
+      - name: Deploy Functions to DEV
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SPBS_ACCESS_TOKEN_DEV }}
+        run: |
+          # Deploys de todas as functions usando a ref direto no comando
+          supabase functions deploy --project-ref ${{ secrets.SPBS_PROJECT_ID_DEV }}
+ 
+  deploy-prod:
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
+    
+    needs: code-review
+    runs-on: ubuntu-22.04
+    environment: Production
+   
+    defaults:
+      run:
+        working-directory: ./back-end
+ 
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+ 
       - name: Deploy Functions to PROD
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SPBS_ACCESS_TOKEN_PROD }}
         run: |
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID_PROD }}
+          supabase functions deploy --project-ref ${{ secrets.SPBS_PROJECT_ID_PROD }}
