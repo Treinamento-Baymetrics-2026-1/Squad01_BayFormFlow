@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS consultancies.t_form_versions (
     clone_of        UUID                            NULL,
     created_by      UUID                            NOT NULL,
     
-
     --PKs
     CONSTRAINT consultancies_t_form_versions_pk PRIMARY KEY (id),
 
