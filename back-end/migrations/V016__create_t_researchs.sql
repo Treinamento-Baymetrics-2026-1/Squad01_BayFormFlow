@@ -26,21 +26,15 @@ CREATE TABLE IF NOT EXISTS consultancies.t_researchs (
     --CHECKs
     CONSTRAINT consultancies_t_researchs_ck_display_name
         CHECK(
-            display_name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
+            display_name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,& -]+\S$'
         ),
     CONSTRAINT consultancies_t_researchs_ck_research_description
         CHECK(
-            research_description ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
+            research_description ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,& -]+\S$'
         ),
     CONSTRAINT consultancies_t_researchs_ck_research_period
         CHECK(
             LOWER(research_period) < UPPER(research_period)
-        ),
-    CONSTRAINT consultancies_t_researchs_ck_periodic
-        CHECK (
-            (is_periodic = FALSE AND period_interval IS NULL)
-            OR 
-            (is_periodic = TRUE AND period_interval IS NOT NULL)
         ),
     CONSTRAINT consultancies_t_researchs_ck_is_deleted
         CHECK(

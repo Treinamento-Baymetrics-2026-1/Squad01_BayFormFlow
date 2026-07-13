@@ -21,11 +21,11 @@ CREATE TABLE IF NOT EXISTS consultancies.t_forms (
     --CHECKs
     CONSTRAINT consultancies_t_forms_ck_display_name
         CHECK(
-            display_name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
+            display_name ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,& -]+\S$'
         ),
     CONSTRAINT consultancies_t_forms_ck_forms_description
         CHECK(
-            forms_description ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,&- ]+\S$'
+            forms_description ~* '^\S(?!.*\s{2,})[a-záàâãèéêìíîóòôôúùû.,& -]+\S$'
         ),
     CONSTRAINT consultancies_t_forms_ck_time_period
         CHECK(
