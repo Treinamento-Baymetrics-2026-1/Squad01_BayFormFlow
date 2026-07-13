@@ -1,4 +1,4 @@
-import type { AdminPort } from "../ports/admin.port.ts";
+import type { AdminPort } from "../../_shared/ports/admin.port.ts";
 import type { AuthPort } from "../ports/auth.port.ts";
 import type { InsertWithIdResult, RepoPort } from "../ports/repos.port.ts";
 

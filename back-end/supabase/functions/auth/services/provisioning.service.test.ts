@@ -5,7 +5,7 @@ import {
   type ProvisioningPorts,
   type ProvisionRequest,
 } from "./provisioning.service.ts";
-import type { CallerIdentity } from "../ports/admin.port.ts";
+import type { CallerIdentity } from "../../_shared/ports/admin.port.ts";
 import type { CreateUserResult, DeleteResult } from "../ports/auth.port.ts";
 import type {
   InsertWithIdResult,

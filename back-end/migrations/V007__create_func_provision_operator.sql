@@ -24,8 +24,7 @@ BEGIN
         RAISE EXCEPTION 'Posição inválida: %', p_position
             USING ERRCODE = 'check_violation';
     END IF;
- 
-   
+
     IF p_is_admin AND v_position <> 'Gestor'::consultants.employee_position THEN
         RAISE EXCEPTION 'is_admin só é permitido quando position = Gestor.'
             USING ERRCODE = 'check_violation';
