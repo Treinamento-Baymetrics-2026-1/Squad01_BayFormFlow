@@ -1,4 +1,3 @@
-
 CREATE SCHEMA IF NOT EXISTS consultancies;
 
 DO $$ BEGIN
@@ -73,7 +72,6 @@ CREATE TABLE IF NOT EXISTS consultancies.t_researchs (
         CHECK (updated_at <= CURRENT_TIMESTAMP(0)),
     CONSTRAINT consultancies_t_researchs_ck_deleted_at
         CHECK (deleted_at <= CURRENT_TIMESTAMP(0)),
- 
 
     CONSTRAINT consultancies_t_researchs_fk_company
         FOREIGN KEY (company_id)  REFERENCES requesters.t_companies (id),
@@ -98,7 +96,6 @@ CREATE TABLE IF NOT EXISTS consultancies.t_forms (
     deleted_by         SMALLINT,            -- ADICIONADO (completa o trio)
     research_id        INT          NOT NULL,
     created_by      UUID NOT NULL,
-
 
     CONSTRAINT consultancies_t_forms_pk PRIMARY KEY (id),
 
@@ -153,9 +150,8 @@ CREATE TABLE IF NOT EXISTS consultancies.t_answers (
     form_version_id UUID        NOT NULL,        -- corrigido de INT
     form_id         UUID        NOT NULL,        -- corrigido de INT
     participant_id  INT         NOT NULL,
-    validated_by    SMALLINT,           
+    validated_by    SMALLINT,
     created_by      UUID NOT NULL,
-
 
     CONSTRAINT consultancies_t_answers_pk PRIMARY KEY (id),
 
