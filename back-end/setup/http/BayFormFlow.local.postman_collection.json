@@ -246,6 +246,141 @@
         },
         "description": "is_admin=true só é válido com position=Gestor -> 400 (.refine do Zod)."
       }
+    },
+    {
+      "name": "── Researches ──────────────────────"
+    },
+    {
+      "name": "8. Criar pesquisa (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 + research_id', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j).to.have.property('research_id');",
+              "  pm.collectionVariables.set('researchId', j.research_id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/researches",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "researches"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"company_id\": 1,\n  \"display_name\": \"Pesquisa de Clima 2026\",\n  \"research_description\": \"Pesquisa anual de clima organizacional\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  }\n}"
+        },
+        "description": "Cria uma pesquisa. Requer admin autenticado e company_id existente (rode o request 4 antes para criar a empresa com id=1)."
+      }
+    },
+    {
+      "name": "9. Pesquisa sem token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('401', function () { pm.response.to.have.status(401); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/researches",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "researches"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"company_id\": 1,\n  \"display_name\": \"Pesquisa Teste\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  }\n}"
+        },
+        "description": "Sem header Authorization -> 401 (middleware requireAuth)."
+      }
+    },
+    {
+      "name": "10. Pesquisa body inválido (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('400', function () { pm.response.to.have.status(400); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/researches",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "researches"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"\",\n  \"research_period\": {\n    \"start\": \"2026-12-01T00:00:00Z\",\n    \"end\": \"2026-01-01T00:00:00Z\"\n  }\n}"
+        },
+        "description": "Body inválido: display_name vazio, falta company_id, end antes de start -> 400 (zValidator/Zod)."
+      }
+    },
+    {
+      "name": "11. Pesquisa company inexistente (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 + company_id inexistente', function () {",
+              "  pm.response.to.have.status(400);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j.error).to.include('company_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/researches",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "researches"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"company_id\": 99999,\n  \"display_name\": \"Pesquisa Fantasma\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  }\n}"
+        },
+        "description": "company_id=99999 não existe no banco -> 400 (validação do service antes do insert)."
+      }
     }
   ]
 }

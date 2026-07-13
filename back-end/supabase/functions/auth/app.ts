@@ -1,6 +1,7 @@
-import { Hono, type MiddlewareHandler } from "hono";
+import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { zValidator } from "@hono/zod-validator";
+import { requireAuth } from "../_shared/require-auth.middleware.ts";
 import { operatorSchema } from "./schemas/operator.schema.ts";
 import { companySchema } from "./schemas/company.schema.ts";
 import { provision } from "./services/provisioning.service.ts";
@@ -16,14 +17,6 @@ app.use(
     allowMethods: ["POST", "OPTIONS"],
   }),
 );
-
-const requireAuth: MiddlewareHandler = async (c, next) => {
-  const auth = c.req.header("Authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    return c.json({ error: "Autenticação necessária." }, 401);
-  }
-  await next();
-};
 
 app.post("/operators", requireAuth, zValidator("json", operatorSchema), async (c) => {
   const input = c.req.valid("json");

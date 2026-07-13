@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS logins.t_users(
     created_by      UUID            NOT NULL,
 
     CONSTRAINT logins_t_users_pk PRIMARY KEY(id),
-
+    
     CONSTRAINT logins_t_users_ck_name
         CHECK(
             -- hífen precisa ser o ÚLTIMO da classe para ser literal ("&- " formava range inválido)

@@ -7,7 +7,6 @@
 -- Acesso aos schemas do supertipo e dos subtipos.
 GRANT USAGE ON SCHEMA logins, consultants, requesters TO service_role;
 
-
 GRANT SELECT, INSERT, DELETE ON logins.t_users TO service_role;
 
 GRANT SELECT, INSERT ON consultants.t_employees TO service_role;
@@ -16,6 +15,5 @@ GRANT SELECT, INSERT ON requesters.t_companies TO service_role;
 
 -- USAGE no enum usado no INSERT de position (t_employees).
 GRANT USAGE ON TYPE consultants.employee_position TO service_role;
-
 
 GRANT USAGE ON SCHEMA helpers TO authenticated, service_role;

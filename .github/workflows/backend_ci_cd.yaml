@@ -41,15 +41,15 @@ jobs:
         uses: denoland/setup-deno@v2.0.4
         with:
           deno-version: 2.4.5
- 
+
       - name: Install dependencies
         working-directory: ${{ env.EDGE_FUNCTIONS_PATH }}
         run: deno install
- 
+
       - name: Lint
         working-directory: ${{ env.EDGE_FUNCTIONS_PATH }}
         run: deno lint
- 
+
       - name: Detect tests
         id: detect-tests
         run: |
@@ -65,7 +65,7 @@ jobs:
         if: env.HAS_TESTS == 'true'
         working-directory: ${{ env.EDGE_FUNCTIONS_PATH }}
         run: deno test --allow-all
- 
+
       - name: Skip tests
         if: env.HAS_TESTS == 'false'
         run: echo "Nenhum teste encontrado. Pulando etapa de testes."
@@ -73,7 +73,7 @@ jobs:
       - name: Type check
         working-directory: ${{ env.EDGE_FUNCTIONS_PATH }}
         run: deno check **/*.ts
- 
+
   deploy-dev:
     if: |
       github.ref == 'refs/heads/dev' &&
