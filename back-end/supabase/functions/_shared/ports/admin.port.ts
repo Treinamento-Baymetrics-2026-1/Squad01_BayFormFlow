@@ -1,4 +1,3 @@
-
 export interface CallerIdentity {
   userId: string;
   isAdmin: boolean;

@@ -14,7 +14,7 @@ port = 54321
 # (insert direto via supabase-js). ATENÇÃO: só suba com esta linha se os schemas
 # JÁ existirem no banco (Flyway rodado); senão o PostgREST falha o health check
 # (503) e o `supabase start` aborta.
-schemas = ["public", "graphql_public"]
+schemas = ["public", "graphql_public", "logins", "consultants", "requesters", "helpers", "consultancies"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
@@ -424,3 +424,14 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/auth/deno.json"
 entrypoint = "./functions/auth/index.ts"
+
+[functions.researches]
+enabled = true
+verify_jwt = false
+import_map = "./functions/researches/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/researches/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/researches/*.html" ]
