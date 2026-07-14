@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "hono": "npm:hono",
+    "hono/cors": "npm:hono/cors",
+    "@hono/zod-validator": "npm:@hono/zod-validator",
+    "zod": "npm:zod",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "@std/assert": "jsr:@std/assert",
+    "@std/testing/mock": "jsr:@std/testing/mock"
+  }
+}

@@ -1,8 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  EmployeeRow,
   InsertResearchResult,
   NewResearchRow,
   ResearchesRepoPort,
+  WriteResult,
 } from "../ports/researches-repo.port.ts";
 
 // SQLSTATEs do Postgres que indicam entrada semanticamente inválida
@@ -49,6 +51,44 @@ export function createSupabaseResearchesRepoAdapter(
         return { ok: false, kind, error: error.message };
       }
       return { ok: true, id: readId(data) };
+    },
+
+    async findEmployeesByIds(ids: number[]): Promise<EmployeeRow[]> {
+      if (ids.length === 0) return [];
+      const { data, error } = await admin
+        .schema("consultants")
+        .from("t_employees")
+        .select("id, position")
+        .in("id", ids);
+      if (error || !data) return [];
+      return data as EmployeeRow[];
+    },
+
+    async assignEmployeesToResearch(
+      researchId: number,
+      employeeIds: number[],
+      createdBy: string,
+    ): Promise<WriteResult> {
+      const rows = employeeIds.map((employeeId) => ({
+        created_at: new Date().toISOString(),
+        manager_id: employeeId,
+        research_alloc: researchId,
+        created_by: createdBy,
+      }));
+      const { error } = await admin
+        .schema("consultants")
+        .from("t_employees_research")
+        .insert(rows);
+      return error ? { ok: false, error: error.message } : { ok: true };
+    },
+
+    async deleteResearchHard(researchId: number): Promise<WriteResult> {
+      const { error } = await admin
+        .schema("consultancies")
+        .from("t_researchs")
+        .delete()
+        .eq("id", researchId);
+      return error ? { ok: false, error: error.message } : { ok: true };
     },
   };
 }
