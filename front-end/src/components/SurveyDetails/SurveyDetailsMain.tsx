@@ -248,7 +248,7 @@ export const SurveyDetailsMain = () => {
                     <div
                       className="bg-blue-primary h-1.5 rounded-full transition-all duration-500"
                       style={{ width: "70%" }}
-                    ></div>
+                    />
                   </div>
                 </div>
               </div>

@@ -21,7 +21,7 @@ interface Step3Props {
     percentualMinimo: string;
     faixaEstimada: string;
   };
-  updateField: (field: any, value: string) => void;
+  updateField: (field: keyof Step3Props["formData"], value: string) => void;
   onBack: () => void;
   onSubmit: () => void;
   editingIndex: number | null;

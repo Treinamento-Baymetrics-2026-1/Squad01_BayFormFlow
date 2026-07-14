@@ -97,7 +97,9 @@ export const NewSurveyForm = ({ pesquisa = null }: NewSurveyFormProps) => {
   };
 
   const handleRemoveParticipante = (indexToRemove: number) => {
-    if (editingIndex === indexToRemove) handleCancelEdit();
+    if (editingIndex === indexToRemove) {
+      handleCancelEdit();
+    }
     setListaParticipantes((prev) =>
       prev.filter((_, idx) => idx !== indexToRemove),
     );
@@ -105,19 +107,32 @@ export const NewSurveyForm = ({ pesquisa = null }: NewSurveyFormProps) => {
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
-    if (step === 1) setStep(2);
-    else if (step === 2) subStepConfig === 1 ? setSubStepConfig(2) : setStep(3);
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      if (subStepConfig === 1) {
+        setSubStepConfig(2);
+      } else {
+        setStep(3);
+      }
+    }
   };
 
   const handleBackStep = () => {
-    if (step === 2) subStepConfig === 2 ? setSubStepConfig(1) : setStep(1);
-    else if (step === 3) {
+    if (step === 2) {
+      if (subStepConfig === 2) {
+        setSubStepConfig(1);
+      } else {
+        setStep(1);
+      }
+    } else if (step === 3) {
       setStep(2);
       setSubStepConfig(2);
     }
   };
 
   const handleSubmitFinal = () => {
+    // eslint-disable-next-line no-console
     console.log("Payload enviado à API:", {
       ...formData,
       participantes: listaParticipantes,
@@ -149,8 +164,9 @@ export const NewSurveyForm = ({ pesquisa = null }: NewSurveyFormProps) => {
 
   const getInitials = (name: string) => {
     const tokens = name.trim().split(/\s+/);
-    if (tokens.length >= 2)
+    if (tokens.length >= 2) {
       return (tokens[0][0] + tokens[tokens.length - 1][0]).toUpperCase();
+    }
     return tokens[0] ? tokens[0][0].toUpperCase() : "";
   };
 

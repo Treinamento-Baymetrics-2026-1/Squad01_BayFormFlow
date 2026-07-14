@@ -86,7 +86,6 @@ export const SearchDropdown = ({
                 onChange={handleSearchChange}
                 placeholder={searchPlaceholder}
                 className="w-full text-sm text-black focus:outline-none bg-transparent"
-                autoFocus
               />
             </div>
           )}

@@ -25,7 +25,7 @@ interface Step1Props {
     prazoInicio: string;
     prazoEncerramento: string;
   };
-  updateField: (field: any, value: string) => void;
+  updateField: (field: keyof Step1Props["formData"], value: string) => void;
   onNext: (e: React.FormEvent) => void;
   onCancel: () => void;
 }
@@ -83,13 +83,17 @@ export const Step1 = ({ formData, updateField, onNext }: Step1Props) => {
   };
 
   const formatarParaPTBR = (dateString: string): string => {
-    if (!dateString) return "";
+    if (!dateString) {
+      return "";
+    }
     const [year, month, day] = dateString.split("-");
     return `${day}/${month}/${year}`;
   };
 
   const converterParaObjetoData = (dateString: string): Date | undefined => {
-    if (!dateString) return undefined;
+    if (!dateString) {
+      return undefined;
+    }
     const [year, month, day] = dateString.split("-").map(Number);
     return new Date(year, month - 1, day);
   };
@@ -142,7 +146,7 @@ export const Step1 = ({ formData, updateField, onNext }: Step1Props) => {
               onChange={(val) => updateField("tipo", val)}
               showSearch={true}
               searchValue={searchTerm}
-              onSearchChange={(e: any) => setSearchTerm(e.target.value)}
+              onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               customNoResults={
                 <div className="flex flex-col items-center justify-center p-4 text-center">
                   <button
@@ -151,7 +155,7 @@ export const Step1 = ({ formData, updateField, onNext }: Step1Props) => {
                     className="flex items-center gap-2 w-full p-2.5 text-sm font-normal text-blue-primary rounded-lg hover:bg-blue-light-secondary transition-colors text-left"
                   >
                     <Plus size={16} />
-                    <span>Criar tipo de pesquisa "{searchTerm}"</span>
+                    <span>Criar tipo de pesquisa &quot;{searchTerm}&quot;</span>
                   </button>
                   <div className="mt-4 text-gray-400 text-xs flex flex-col items-center gap-2">
                     <div className="bg-blue-light-secondary p-3 rounded-lg flex items-center justify-center">
