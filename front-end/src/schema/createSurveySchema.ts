@@ -7,7 +7,7 @@ export const participanteSchema = z.object({
   rm: z.string().optional().or(z.literal("")),
 }).refine((data) => data.email || data.rm, {
   message: "É necessário preencher pelo menos o E-mail ou o RM",
-  path: ["email"], // Define onde o erro principal será exibido
+  path: ["email"],
 });
 
 export const surveyFormSchema1 = z.object({
