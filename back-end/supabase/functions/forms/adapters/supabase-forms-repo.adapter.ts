@@ -1,7 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  FormSummaryRow,
   FormsRepoPort,
   InsertResult,
+  ListFormsFilter,
   NewFormRow,
   NewFormVersionRow,
   WriteResult,
@@ -109,11 +111,66 @@ export function createSupabaseFormsRepoAdapter(
         .eq("id", formId);
       return error ? { ok: false, error: error.message } : { ok: true };
     },
+
+    async listForms(filter: ListFormsFilter): Promise<FormSummaryRow[]> {
+      let query = admin
+        .schema("consultancies")
+        .from("t_forms")
+        .select(
+          "id, display_name, forms_description, time_period, form_status, participant_target, published_at, created_at, research_id",
+        )
+        .eq("is_deleted", false)
+        .order("created_at", { ascending: false });
+
+      if (filter.researchId !== undefined) {
+        query = query.eq("research_id", filter.researchId);
+      }
+      if (filter.formStatus !== undefined) {
+        query = query.eq("form_status", filter.formStatus);
+      }
+
+      const { data, error } = await query;
+      if (error || !data) return [];
+      return data.map(toFormSummaryRow);
+    },
   };
 }
 
 function toTstzRangeLiteral(start: string, end: string): string {
   return `[${start},${end})`;
+}
+
+function toFormSummaryRow(row: {
+  id: string;
+  display_name: string;
+  forms_description: string;
+  time_period: string;
+  form_status: string;
+  participant_target: number;
+  published_at: string | null;
+  created_at: string;
+  research_id: number;
+}): FormSummaryRow {
+  const { start, end } = parseTstzRangeLiteral(row.time_period);
+  return {
+    id: row.id,
+    displayName: row.display_name,
+    formsDescription: row.forms_description,
+    periodStart: start,
+    periodEnd: end,
+    formStatus: row.form_status,
+    participantTarget: row.participant_target,
+    publishedAt: row.published_at,
+    createdAt: row.created_at,
+    researchId: row.research_id,
+  };
+}
+
+// Postgres devolve tstzrange como texto, ex.: ["2026-01-01 00:00:00+00","2026-03-01 00:00:00+00")
+function parseTstzRangeLiteral(literal: string): { start: string; end: string } {
+  const inner = literal.slice(1, -1);
+  const [start, end] = inner.split(",").map((s) => s.replace(/^"|"$/g, ""));
+  return { start, end };
 }
 
 function readId(data: unknown): number | undefined {

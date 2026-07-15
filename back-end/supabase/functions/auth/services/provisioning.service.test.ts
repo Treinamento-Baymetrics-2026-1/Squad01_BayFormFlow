@@ -8,10 +8,14 @@ import {
 import type { CallerIdentity } from "../../_shared/ports/admin.port.ts";
 import type { CreateUserResult, DeleteResult } from "../ports/auth.port.ts";
 import type {
+  CompanyRoleRow,
+  CompanyRow,
+  EmployeeRoleRow,
   InsertWithIdResult,
   NewCompanyRow,
   NewEmployeeRow,
   NewUserRow,
+  UserRow,
   WriteResult,
 } from "../ports/repos.port.ts";
 
@@ -73,7 +77,17 @@ function buildPorts(cfg: FakeConfig = {}, order: string[] = []) {
   const ports: ProvisioningPorts = {
     admin: { me },
     auth: { createUser, deleteUser },
-    repos: { insertUser, deleteUserHard, insertEmployee, insertCompany },
+    repos: {
+      insertUser,
+      deleteUserHard,
+      insertEmployee,
+      insertCompany,
+      listUsers: spy((): Promise<UserRow[]> => Promise.resolve([])),
+      listCompanies: spy((): Promise<CompanyRow[]> => Promise.resolve([])),
+      findUsersByIds: spy((_ids: string[]): Promise<UserRow[]> => Promise.resolve([])),
+      findEmployeesByUserIds: spy((_ids: string[]): Promise<EmployeeRoleRow[]> => Promise.resolve([])),
+      findCompaniesByUserIds: spy((_ids: string[]): Promise<CompanyRoleRow[]> => Promise.resolve([])),
+    },
   };
 
   return { ports, me, createUser, deleteUser, insertUser, deleteUserHard, insertEmployee, insertCompany };

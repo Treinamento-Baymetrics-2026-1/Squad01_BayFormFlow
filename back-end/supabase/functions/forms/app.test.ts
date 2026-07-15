@@ -36,3 +36,15 @@ Deno.test("rota: preflight OPTIONS reflete o CORS allow-origin", async () => {
   });
   assertEquals(res.headers.get("Access-Control-Allow-Origin"), "http://127.0.0.1:3000");
 });
+
+Deno.test("rota: GET /forms sem Authorization → 401", async () => {
+  const res = await app.request("/forms");
+  assertEquals(res.status, 401);
+});
+
+Deno.test("rota: GET /forms com research_id inválido (com Authorization) → 400 do Zod", async () => {
+  const res = await app.request("/forms?research_id=abc", {
+    headers: { "Authorization": "Bearer dummy" },
+  });
+  assertEquals(res.status, 400);
+});

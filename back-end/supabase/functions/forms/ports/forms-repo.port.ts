@@ -25,10 +25,29 @@ export interface WriteResult {
   error?: string;
 }
 
+export interface ListFormsFilter {
+  researchId?: number;
+  formStatus?: string;
+}
+
+export interface FormSummaryRow {
+  id: string;
+  displayName: string;
+  formsDescription: string;
+  periodStart: string;
+  periodEnd: string;
+  formStatus: string;
+  participantTarget: number;
+  publishedAt: string | null;
+  createdAt: string;
+  researchId: number;
+}
+
 export interface FormsRepoPort {
   researchExists(researchId: number): Promise<boolean>;
   isResearchManager(callerUserId: string, researchId: number): Promise<boolean>;
   insertForm(row: NewFormRow): Promise<InsertResult>;
   insertFormVersion(row: NewFormVersionRow): Promise<InsertResult>;
   deleteFormHard(formId: string): Promise<WriteResult>;
+  listForms(filter: ListFormsFilter): Promise<FormSummaryRow[]>;
 }
