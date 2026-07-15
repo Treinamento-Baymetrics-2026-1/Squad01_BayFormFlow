@@ -1,0 +1,14 @@
+CREATE OR REPLACE FUNCTION helpers.updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+VOLATILE
+PARALLEL UNSAFE
+SECURITY INVOKER
+COST 1
+SET search_path = pg_catalog
+AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
