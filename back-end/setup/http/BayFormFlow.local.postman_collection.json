@@ -2,7 +2,7 @@
   "info": {
     "name": "BayFormFlow — auth (local)",
     "_postman_id": "b0f1a1c2-0000-4a00-9000-bayformflowauth",
-    "description": "Kit de teste manual da Edge Function `auth` no Supabase local.\n\nRotas: POST /functions/v1/auth/operators e POST /functions/v1/auth/companies.\n\nSubida do ambiente (volume limpo, nesta ordem):\n1) npx supabase db start — sobe SÓ o Postgres (evita o 503 do PostgREST em banco novo).\n2) Flyway: docker compose -f setup/docker/docker-compose.local.yaml run --rm local_flyway migrate — aplica V001–V010; a V010 JÁ cria o admin (não existe mais seed.sql).\n3) npx supabase start — demais serviços; os schemas já existem e o health check passa.\n\nAntes de rodar: preencha a variável `anonKey` com a anon/publishable key impressa pelo `supabase start`. Rode o request 1 (Login) primeiro — ele salva `adminToken` automaticamente.\n\nObs.: os CHECKs do banco (CNPJ com dígito verificador, phonenumber) podem rejeitar valores que o Zod aceita — nesse caso a saga retorna 500 (rollback). Os samples usam valores que passam.",
+    "description": "Kit de teste manual das Edge Functions `auth`, `researches` e `forms` no Supabase local.\n\nRotas: POST /functions/v1/auth/operators, POST /functions/v1/auth/companies, GET /functions/v1/auth/users, GET /functions/v1/auth/companies, POST /functions/v1/researches, POST /functions/v1/forms, GET /functions/v1/forms.\n\nSubida do ambiente (volume limpo, nesta ordem):\n1) npx supabase db start — sobe SÓ o Postgres (evita o 503 do PostgREST em banco novo).\n2) Flyway: docker compose -f setup/docker/docker-compose.local.yaml run --rm local_flyway migrate — aplica todas as migrations (a V010 JÁ cria o admin; não existe mais seed.sql).\n3) npx supabase start — demais serviços; os schemas já existem e o health check passa.\n\nAntes de rodar: preencha a variável `anonKey` com a anon/publishable key impressa pelo `supabase start`. Rode a collection na ordem (1 → 29) — vários requests têm um pre-request script que aborta com uma mensagem clara (em vez do erro genérico do Zod/400) se alguma variável da qual dependem ainda não foi preenchida. Cadeia de dependências: request 1 salva `adminToken`; requests 3/4 provisionam e logam o Validador (`validador1EmployeeId`/`validador1Token`); request 5 cria a empresa (`companyId`); requests 6/7 provisionam e logam o Gestor (`gestorEmployeeId`/`gestorToken`); request 11 (Researches) precisa de `companyId`+`gestorEmployeeId`+`validador1EmployeeId` e salva `researchId`; requests 15/19/20 (Forms) precisam de `researchId`; requests 21-29 (GET /auth/users, /auth/companies, /forms — todas Admin-only) reusam `adminToken`/`gestorToken`/`companyId`/`researchId` já salvos. Se re-rodar do zero (banco novo), troque `validador1Email`/`gestorEmail` e o email do request 5 nas variáveis da collection — email repetido dá 409.\n\nObs.: os CHECKs do banco podem rejeitar valores que o Zod aceita — nesse caso a saga retorna 400/500. Dois já mapeados: CNPJ precisa ter dígito verificador válido (não só formato), e display_name/forms_description em `researches`/`forms` NÃO aceitam dígitos (regex só letras/pontuação) — os samples desta collection usam valores que passam nos dois.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -10,7 +10,19 @@
     { "key": "anonKey", "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0" },
     { "key": "adminEmail", "value": "admin@bayformflow.local" },
     { "key": "adminPassword", "value": "Admin@12345" },
-    { "key": "adminToken", "value": "" }
+    { "key": "adminToken", "value": "" },
+    { "key": "validador1Email", "value": "validador1@bayformflow.local" },
+    { "key": "validador1Password", "value": "Senha12345" },
+    { "key": "validador1Token", "value": "" },
+    { "key": "validador1EmployeeId", "value": "" },
+    { "key": "gestorEmail", "value": "gestor1@bayformflow.local" },
+    { "key": "gestorPassword", "value": "Senha12345" },
+    { "key": "gestorToken", "value": "" },
+    { "key": "gestorEmployeeId", "value": "" },
+    { "key": "companyId", "value": "" },
+    { "key": "researchId", "value": "" },
+    { "key": "formId", "value": "" },
+    { "key": "formVersionId", "value": "" }
   ],
   "item": [
     {
@@ -85,18 +97,19 @@
       }
     },
     {
-      "name": "3. Provisionar operador (201)",
+      "name": "3. Provisionar Validador 1 (201, salva validador1EmployeeId)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
+              "const json = pm.response.json();",
+              "if (json.employee_id) { pm.collectionVariables.set('validador1EmployeeId', json.employee_id); }",
               "pm.test('201 + user_id/employee_id', function () {",
               "  pm.response.to.have.status(201);",
-              "  const j = pm.response.json();",
-              "  pm.expect(j).to.have.property('user_id');",
-              "  pm.expect(j).to.have.property('employee_id');",
+              "  pm.expect(json).to.have.property('user_id');",
+              "  pm.expect(json).to.have.property('employee_id');",
               "});"
             ]
           }
@@ -116,24 +129,62 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"display_name\": \"Fulano De Tal\",\n  \"email\": \"operador@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"position\": \"Validador\",\n  \"is_admin\": false\n}"
+          "raw": "{\n  \"display_name\": \"Validador Um\",\n  \"email\": \"{{validador1Email}}\",\n  \"password\": \"{{validador1Password}}\",\n  \"position\": \"Validador\",\n  \"is_admin\": false\n}"
         },
-        "description": "Cadastro de operador. Troque o email a cada execução (email repetido -> 409)."
+        "description": "Cadastro do operador que será usado como validador em /researches e depois pra provar o 403 em /forms (validador não é gestor). Salva employee_id em {{validador1EmployeeId}}. Se re-rodar num banco novo, troque {{validador1Email}} (email repetido -> 409)."
       }
     },
     {
-      "name": "4. Provisionar compania (201)",
+      "name": "4. Login Validador 1 (salva validador1Token)",
       "event": [
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
+              "const json = pm.response.json();",
+              "if (json.access_token) { pm.collectionVariables.set('validador1Token', json.access_token); }",
+              "pm.test('200 + access_token', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(json.access_token, 'access_token').to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/v1/token?grant_type=password",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "v1", "token"],
+          "query": [{ "key": "grant_type", "value": "password" }]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{validador1Email}}\",\n  \"password\": \"{{validador1Password}}\"\n}"
+        },
+        "description": "Login do Validador 1 provisionado no request 3. Salva o access_token em {{validador1Token}}."
+      }
+    },
+    {
+      "name": "5. Provisionar compania (201, salva companyId)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.company_id) { pm.collectionVariables.set('companyId', json.company_id); }",
               "pm.test('201 + user_id/company_id', function () {",
               "  pm.response.to.have.status(201);",
-              "  const j = pm.response.json();",
-              "  pm.expect(j).to.have.property('user_id');",
-              "  pm.expect(j).to.have.property('company_id');",
+              "  pm.expect(json).to.have.property('user_id');",
+              "  pm.expect(json).to.have.property('company_id');",
               "});"
             ]
           }
@@ -153,13 +204,88 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"display_name\": \"Empresa Modelo\",\n  \"email\": \"empresa@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"cnpj\": \"11222333000181\",\n  \"phonenumber\": \"11987654321\"\n}"
+          "raw": "{\n  \"display_name\": \"Empresa Modelo\",\n  \"email\": \"empresa@bayformflow.local\",\n  \"password\": \"Senha12345\",\n  \"cnpj\": \"11444777000161\",\n  \"phonenumber\": \"11987654321\"\n}"
         },
-        "description": "Cadastro de compania. CNPJ 11222333000181 tem dígito verificador válido. Troque o email a cada execução."
+        "description": "Cadastro de compania. CNPJ 11444777000161 (11.444.777/0001-61, exemplo didático clássico) tem dígito verificador válido — conferido bit a bit contra o algoritmo de requesters.is_valid_cnpj (V005) e testado ao vivo contra o banco local. Troque o email a cada execução."
       }
     },
     {
-      "name": "5. Operador sem token (401)",
+      "name": "6. Provisionar Gestor (201, salva gestorEmployeeId)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.employee_id) { pm.collectionVariables.set('gestorEmployeeId', json.employee_id); }",
+              "pm.test('201 + user_id/employee_id', function () {",
+              "  pm.response.to.have.status(201);",
+              "  pm.expect(json).to.have.property('user_id');",
+              "  pm.expect(json).to.have.property('employee_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/operators",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "operators"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"Gestor Um\",\n  \"email\": \"{{gestorEmail}}\",\n  \"password\": \"{{gestorPassword}}\",\n  \"position\": \"Gestor\",\n  \"is_admin\": false\n}"
+        },
+        "description": "Cadastro do operador que será o gestor responsável da pesquisa/formulário. Salva employee_id em {{gestorEmployeeId}}. Se re-rodar num banco novo, troque {{gestorEmail}} (email repetido -> 409)."
+      }
+    },
+    {
+      "name": "7. Login Gestor (salva gestorToken)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.access_token) { pm.collectionVariables.set('gestorToken', json.access_token); }",
+              "pm.test('200 + access_token', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(json.access_token, 'access_token').to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/v1/token?grant_type=password",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "v1", "token"],
+          "query": [{ "key": "grant_type", "value": "password" }]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{gestorEmail}}\",\n  \"password\": \"{{gestorPassword}}\"\n}"
+        },
+        "description": "Login do Gestor provisionado no request 6. Salva o access_token em {{gestorToken}}."
+      }
+    },
+    {
+      "name": "8. Operador sem token (401)",
       "event": [
         {
           "listen": "test",
@@ -188,7 +314,7 @@
       }
     },
     {
-      "name": "6. Operador body inválido (400)",
+      "name": "9. Operador body inválido (400)",
       "event": [
         {
           "listen": "test",
@@ -218,7 +344,7 @@
       }
     },
     {
-      "name": "7. Validador com is_admin (400 refine)",
+      "name": "10. Validador com is_admin (400 refine)",
       "event": [
         {
           "listen": "test",
@@ -251,18 +377,31 @@
       "name": "── Researches ──────────────────────"
     },
     {
-      "name": "8. Criar pesquisa (201)",
+      "name": "11. Criar pesquisa (201, salva researchId)",
       "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "['adminToken', 'companyId', 'gestorEmployeeId', 'validador1EmployeeId'].forEach(function (key) {",
+              "  if (!pm.collectionVariables.get(key)) {",
+              "    throw new Error('Variável {{' + key + '}} está vazia — rode os requests 1, 5, 6 e 3 antes deste (nessa ordem de dependência, não precisa ser a ordem numérica).');",
+              "  }",
+              "});"
+            ]
+          }
+        },
         {
           "listen": "test",
           "script": {
             "type": "text/javascript",
             "exec": [
+              "const json = pm.response.json();",
+              "if (json.research_id) { pm.collectionVariables.set('researchId', json.research_id); }",
               "pm.test('201 + research_id', function () {",
               "  pm.response.to.have.status(201);",
-              "  const j = pm.response.json();",
-              "  pm.expect(j).to.have.property('research_id');",
-              "  pm.collectionVariables.set('researchId', j.research_id);",
+              "  pm.expect(json).to.have.property('research_id');",
               "});"
             ]
           }
@@ -282,13 +421,13 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"company_id\": 1,\n  \"display_name\": \"Pesquisa de Clima 2026\",\n  \"research_description\": \"Pesquisa anual de clima organizacional\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  }\n}"
+          "raw": "{\n  \"company_id\": {{companyId}},\n  \"display_name\": \"Pesquisa de Clima Anual\",\n  \"research_description\": \"Pesquisa anual de clima organizacional\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  },\n  \"manager_id\": {{gestorEmployeeId}},\n  \"validator_ids\": [{{validador1EmployeeId}}]\n}"
         },
-        "description": "Cria uma pesquisa. Requer admin autenticado e company_id existente (rode o request 4 antes para criar a empresa com id=1)."
+        "description": "Cria uma pesquisa. Requer admin autenticado, company_id existente ({{companyId}}, salvo pelo request 5), manager_id de um funcionário com position='Gestor' (request 6) e validator_ids de funcionários com position='Validador' (request 3). Salva o id em {{researchId}} — usado depois em /forms. display_name SEM dígitos — a CHECK do banco (consultancies_t_researchs_ck_display_name) só aceita letras/pontuação, não números."
       }
     },
     {
-      "name": "9. Pesquisa sem token (401)",
+      "name": "12. Pesquisa sem token (401)",
       "event": [
         {
           "listen": "test",
@@ -311,13 +450,13 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"company_id\": 1,\n  \"display_name\": \"Pesquisa Teste\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  }\n}"
+          "raw": "{\n  \"company_id\": {{companyId}},\n  \"display_name\": \"Pesquisa Teste\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  },\n  \"manager_id\": {{gestorEmployeeId}},\n  \"validator_ids\": [{{validador1EmployeeId}}]\n}"
         },
         "description": "Sem header Authorization -> 401 (middleware requireAuth)."
       }
     },
     {
-      "name": "10. Pesquisa body inválido (400)",
+      "name": "13. Pesquisa body inválido (400)",
       "event": [
         {
           "listen": "test",
@@ -343,11 +482,11 @@
           "mode": "raw",
           "raw": "{\n  \"display_name\": \"\",\n  \"research_period\": {\n    \"start\": \"2026-12-01T00:00:00Z\",\n    \"end\": \"2026-01-01T00:00:00Z\"\n  }\n}"
         },
-        "description": "Body inválido: display_name vazio, falta company_id, end antes de start -> 400 (zValidator/Zod)."
+        "description": "Body inválido: display_name vazio, falta company_id/manager_id/validator_ids, end antes de start -> 400 (zValidator/Zod)."
       }
     },
     {
-      "name": "11. Pesquisa company inexistente (400)",
+      "name": "14. Pesquisa company inexistente (400)",
       "event": [
         {
           "listen": "test",
@@ -377,9 +516,565 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"company_id\": 99999,\n  \"display_name\": \"Pesquisa Fantasma\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  }\n}"
+          "raw": "{\n  \"company_id\": 99999,\n  \"display_name\": \"Pesquisa Fantasma\",\n  \"research_period\": {\n    \"start\": \"2026-08-01T00:00:00Z\",\n    \"end\": \"2026-12-31T23:59:59Z\"\n  },\n  \"manager_id\": {{gestorEmployeeId}},\n  \"validator_ids\": [{{validador1EmployeeId}}]\n}"
         },
-        "description": "company_id=99999 não existe no banco -> 400 (validação do service antes do insert)."
+        "description": "company_id=99999 não existe no banco -> 400 (o service checa a empresa ANTES de validar gestor/validadores, então manager_id/validator_ids nem precisam ser reais aqui)."
+      }
+    },
+    {
+      "name": "── Forms ──────────────────────────"
+    },
+    {
+      "name": "15. Criar formulário (201, admin, salva formId/formVersionId)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('researchId')) {",
+              "  throw new Error('Variável {{researchId}} está vazia — rode o request 11 (Criar pesquisa) antes deste.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.form_id) { pm.collectionVariables.set('formId', json.form_id); }",
+              "if (json.form_version_id) { pm.collectionVariables.set('formVersionId', json.form_version_id); }",
+              "pm.test('201 + form_id/form_version_id', function () {",
+              "  pm.response.to.have.status(201);",
+              "  pm.expect(json).to.have.property('form_id');",
+              "  pm.expect(json).to.have.property('form_version_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"research_id\": {{researchId}},\n  \"display_name\": \"Formulário de Onboarding\",\n  \"forms_description\": \"Formulário inicial de coleta de dados dos participantes\",\n  \"time_period\": {\n    \"start\": \"2026-08-15T00:00:00Z\",\n    \"end\": \"2026-09-15T00:00:00Z\"\n  },\n  \"participant_target\": 20,\n  \"form\": {\n    \"fields\": [\n      { \"type\": \"text\", \"label\": \"Nome completo\", \"required\": true },\n      { \"type\": \"email\", \"label\": \"E-mail\", \"required\": true }\n    ]\n  }\n}"
+        },
+        "description": "Cria o cabeçalho do formulário + a primeira versão (version_status='Em Análise' fixo no service). Requer admin ou o gestor responsável pela pesquisa, e research_id existente (rode o request 11 antes). Salva form_id/form_version_id."
+      }
+    },
+    {
+      "name": "16. Formulário sem token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('401', function () { pm.response.to.have.status(401); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"research_id\": {{researchId}},\n  \"display_name\": \"Formulário Teste\",\n  \"forms_description\": \"Descrição de teste\",\n  \"time_period\": {\n    \"start\": \"2026-08-15T00:00:00Z\",\n    \"end\": \"2026-09-15T00:00:00Z\"\n  },\n  \"participant_target\": 10,\n  \"form\": { \"fields\": [] }\n}"
+        },
+        "description": "Sem header Authorization -> 401 (middleware requireAuth)."
+      }
+    },
+    {
+      "name": "17. Formulário body inválido (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('400', function () { pm.response.to.have.status(400); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"research_id\": {{researchId}},\n  \"display_name\": \"\",\n  \"time_period\": {\n    \"start\": \"2026-09-15T00:00:00Z\",\n    \"end\": \"2026-08-15T00:00:00Z\"\n  }\n}"
+        },
+        "description": "Body inválido: display_name vazio, faltam forms_description/participant_target/form, end antes de start -> 400 (zValidator/Zod)."
+      }
+    },
+    {
+      "name": "18. Formulário research_id inexistente (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 + research_id inexistente', function () {",
+              "  pm.response.to.have.status(400);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j.error).to.include('research_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"research_id\": 999999,\n  \"display_name\": \"Formulário Fantasma\",\n  \"forms_description\": \"Descrição de teste\",\n  \"time_period\": {\n    \"start\": \"2026-08-15T00:00:00Z\",\n    \"end\": \"2026-09-15T00:00:00Z\"\n  },\n  \"participant_target\": 10,\n  \"form\": { \"fields\": [] }\n}"
+        },
+        "description": "research_id=999999 não existe -> 400 (como admin, passa direto pra checagem de existência)."
+      }
+    },
+    {
+      "name": "19. Gestor responsável cria formulário (201)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "['researchId', 'gestorToken'].forEach(function (key) {",
+              "  if (!pm.collectionVariables.get(key)) {",
+              "    throw new Error('Variável {{' + key + '}} está vazia — rode os requests 11 e 7 antes deste.');",
+              "  }",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 + form_id/form_version_id', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j).to.have.property('form_id');",
+              "  pm.expect(j).to.have.property('form_version_id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{gestorToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"research_id\": {{researchId}},\n  \"display_name\": \"Formulário de Encerramento\",\n  \"forms_description\": \"Formulário de encerramento da pesquisa\",\n  \"time_period\": {\n    \"start\": \"2026-11-01T00:00:00Z\",\n    \"end\": \"2026-12-01T00:00:00Z\"\n  },\n  \"participant_target\": 15,\n  \"form\": { \"fields\": [{ \"type\": \"textarea\", \"label\": \"Comentários finais\" }] }\n}"
+        },
+        "description": "Não-admin, mas é o gestor vinculado a {{researchId}} (request 11 usou manager_id={{gestorEmployeeId}}) -> autorizado, 201."
+      }
+    },
+    {
+      "name": "20. Validador (não-gestor) tenta criar formulário (403)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "['researchId', 'validador1Token'].forEach(function (key) {",
+              "  if (!pm.collectionVariables.get(key)) {",
+              "    throw new Error('Variável {{' + key + '}} está vazia — rode os requests 11 e 4 antes deste.');",
+              "  }",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('403', function () { pm.response.to.have.status(403); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{validador1Token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"research_id\": {{researchId}},\n  \"display_name\": \"Formulário Não Autorizado\",\n  \"forms_description\": \"Não deveria ser criado\",\n  \"time_period\": {\n    \"start\": \"2026-08-15T00:00:00Z\",\n    \"end\": \"2026-09-15T00:00:00Z\"\n  },\n  \"participant_target\": 10,\n  \"form\": { \"fields\": [] }\n}"
+        },
+        "description": "Validador 1 é validador de {{researchId}} (request 11), mas não é admin nem o gestor -> 403, mesmo sendo um funcionário vinculado à pesquisa."
+      }
+    },
+    {
+      "name": "── Admin Listing (users/companies/forms) ──"
+    },
+    {
+      "name": "21. Listar usuários (admin, 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 + users array com role', function () {",
+              "  pm.response.to.have.status(200);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j.users, 'users').to.be.an('array');",
+              "  pm.expect(j.users.length).to.be.above(0);",
+              "  pm.expect(j.users[0]).to.have.property('role');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "users"]
+        },
+        "description": "Lista todos os usuários (logins.t_users) com o papel resolvido (role.type: 'employee'|'company'|null e os dados correspondentes). Admin-only."
+      }
+    },
+    {
+      "name": "22. Listar usuários sem token (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('401', function () { pm.response.to.have.status(401); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "apikey", "value": "{{anonKey}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "users"]
+        },
+        "description": "Sem header Authorization -> 401 (middleware requireAuth)."
+      }
+    },
+    {
+      "name": "23. Listar usuários como Gestor (403)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('gestorToken')) {",
+              "  throw new Error('Variável {{gestorToken}} está vazia — rode o request 7 (Login Gestor) antes deste.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('403', function () { pm.response.to.have.status(403); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{gestorToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "users"]
+        },
+        "description": "Gestor não é admin -> 403 (rota é Admin-only, sem exceção pro gestor, diferente de POST /forms)."
+      }
+    },
+    {
+      "name": "24. Listar empresas (admin, 200, inclui companyId)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('companyId')) {",
+              "  throw new Error('Variável {{companyId}} está vazia — rode o request 5 (Provisionar compania) antes deste.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 + companies array contém companyId', function () {",
+              "  pm.response.to.have.status(200);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j.companies, 'companies').to.be.an('array');",
+              "  const companyId = Number(pm.collectionVariables.get('companyId'));",
+              "  const found = j.companies.some(function (c) { return c.id === companyId; });",
+              "  pm.expect(found, 'companyId presente na lista').to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/companies",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "companies"]
+        },
+        "description": "Lista todas as empresas (requesters.t_companies) enriquecidas com display_name/is_deleted/created_at do usuário vinculado. Admin-only."
+      }
+    },
+    {
+      "name": "25. Listar empresas como Gestor (403)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('gestorToken')) {",
+              "  throw new Error('Variável {{gestorToken}} está vazia — rode o request 7 (Login Gestor) antes deste.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('403', function () { pm.response.to.have.status(403); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{gestorToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/auth/companies",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "auth", "companies"]
+        },
+        "description": "Gestor não é admin -> 403 (Admin-only)."
+      }
+    },
+    {
+      "name": "26. Pesquisar formulários (admin, 200, sem filtro)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 + forms array', function () {",
+              "  pm.response.to.have.status(200);",
+              "  const j = pm.response.json();",
+              "  pm.expect(j.forms, 'forms').to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "description": "Lista/pesquisa formulários (consultancies.t_forms, is_deleted=false), sem o JSONB da versão. Filtros opcionais via query string: research_id, form_status. Admin-only."
+      }
+    },
+    {
+      "name": "27. Pesquisar formulários por research_id (admin, 200, filtrado)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('researchId')) {",
+              "  throw new Error('Variável {{researchId}} está vazia — rode o request 11 (Criar pesquisa) antes deste.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 + todos os forms pertencem ao research_id filtrado', function () {",
+              "  pm.response.to.have.status(200);",
+              "  const j = pm.response.json();",
+              "  const researchId = Number(pm.collectionVariables.get('researchId'));",
+              "  pm.expect(j.forms, 'forms').to.be.an('array');",
+              "  j.forms.forEach(function (f) {",
+              "    pm.expect(f.research_id).to.eql(researchId);",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms?research_id={{researchId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"],
+          "query": [{ "key": "research_id", "value": "{{researchId}}" }]
+        },
+        "description": "Mesma listagem, filtrada por research_id={{researchId}} (pesquisa criada no request 11)."
+      }
+    },
+    {
+      "name": "28. Pesquisar formulários com research_id inválido (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('400 (Zod)', function () { pm.response.to.have.status(400); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms?research_id=abc",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"],
+          "query": [{ "key": "research_id", "value": "abc" }]
+        },
+        "description": "research_id não-numérico -> 400 (zValidator/Zod na query)."
+      }
+    },
+    {
+      "name": "29. Pesquisar formulários como Gestor (403)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('gestorToken')) {",
+              "  throw new Error('Variável {{gestorToken}} está vazia — rode o request 7 (Login Gestor) antes deste.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('403', function () { pm.response.to.have.status(403); });"]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "apikey", "value": "{{anonKey}}" },
+          { "key": "Authorization", "value": "Bearer {{gestorToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/functions/v1/forms",
+          "host": ["{{baseUrl}}"],
+          "path": ["functions", "v1", "forms"]
+        },
+        "description": "GET /forms é Admin-only mesmo pro gestor responsável pela pesquisa -> 403 (diferente do POST /forms, que aceita o gestor)."
       }
     }
   ]

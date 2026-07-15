@@ -5,6 +5,8 @@ import { requireAuth } from "../_shared/require-auth.middleware.ts";
 import { operatorSchema } from "./schemas/operator.schema.ts";
 import { companySchema } from "./schemas/company.schema.ts";
 import { provision } from "./services/provisioning.service.ts";
+import { listUsers } from "./services/list-users.service.ts";
+import { listCompanies } from "./services/list-companies.service.ts";
 import { buildPorts } from "./deps.ts";
 
 export const app = new Hono().basePath("/auth");
@@ -14,7 +16,7 @@ app.use(
   cors({
     origin: "http://127.0.0.1:3000",
     allowHeaders: ["authorization", "x-client-info", "apikey", "content-type"],
-    allowMethods: ["POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
   }),
 );
 
@@ -55,5 +57,17 @@ app.post("/companies", requireAuth, zValidator("json", companySchema), async (c)
       }),
     subtypeIdKey: "company_id",
   });
+  return Response.json(res.body, { status: res.status });
+});
+
+app.get("/users", requireAuth, async (c) => {
+  const ports = buildPorts(c.req.raw);
+  const res = await listUsers(ports);
+  return Response.json(res.body, { status: res.status });
+});
+
+app.get("/companies", requireAuth, async (c) => {
+  const ports = buildPorts(c.req.raw);
+  const res = await listCompanies(ports);
   return Response.json(res.body, { status: res.status });
 });

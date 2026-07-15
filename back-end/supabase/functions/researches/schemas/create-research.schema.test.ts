@@ -6,6 +6,8 @@ function validPayload(overrides: Record<string, unknown> = {}): Record<string, u
     company_id: 1,
     display_name: "Pesquisa de Clima 2026",
     research_period: { start: "2026-01-01T00:00:00Z", end: "2026-03-01T00:00:00Z" },
+    manager_id: 10,
+    validator_ids: [20, 21],
     ...overrides,
   };
 }
@@ -62,3 +64,46 @@ Deno.test("research_period.end igual a research_period.start → falha", () => {
   assertFalse(res.success);
 });
 
+Deno.test("manager_id ausente → falha", () => {
+  const payload = validPayload();
+  delete payload.manager_id;
+  const res = createResearchSchema.safeParse(payload);
+  assertFalse(res.success);
+});
+
+Deno.test("manager_id não-positivo → falha", () => {
+  const res = createResearchSchema.safeParse(validPayload({ manager_id: 0 }));
+  assertFalse(res.success);
+});
+
+Deno.test("validator_ids ausente → falha", () => {
+  const payload = validPayload();
+  delete payload.validator_ids;
+  const res = createResearchSchema.safeParse(payload);
+  assertFalse(res.success);
+});
+
+Deno.test("validator_ids vazio → falha", () => {
+  const res = createResearchSchema.safeParse(validPayload({ validator_ids: [] }));
+  assertFalse(res.success);
+});
+
+Deno.test("validator_ids com id duplicado → falha", () => {
+  const res = createResearchSchema.safeParse(validPayload({ validator_ids: [20, 20] }));
+  assertFalse(res.success);
+});
+
+Deno.test("validator_ids com id não-positivo → falha", () => {
+  const res = createResearchSchema.safeParse(validPayload({ validator_ids: [20, 0] }));
+  assertFalse(res.success);
+});
+
+Deno.test("manager_id também presente em validator_ids → falha", () => {
+  const res = createResearchSchema.safeParse(validPayload({ manager_id: 20, validator_ids: [20, 21] }));
+  assertFalse(res.success);
+});
+
+Deno.test("validator_ids com um único validador → sucesso", () => {
+  const res = createResearchSchema.safeParse(validPayload({ validator_ids: [20] }));
+  assertEquals(res.success, true);
+});

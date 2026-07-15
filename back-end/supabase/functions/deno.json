@@ -1,4 +1,4 @@
 {
   "nodeModulesDir": "auto",
-  "workspace": ["./auth", "./researches"]
+  "workspace": ["./auth", "./researches", "./forms"]
 }
