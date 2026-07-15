@@ -74,8 +74,8 @@ export const SurveyTableAdm = () => {
         <h3 className="font-bold text-2xl text-blue-primary">Pesquisas</h3>
         <Button
           type="button"
-          onClick={() => navigate("/pesquisas/novapesquisa")}
-          className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary shadow-box-field"
+          onClick={() => navigate("/pesquisas/nova-pesquisa")}
+          className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary hover:bg-blue-primary shadow-box-field cursor-pointer"
         >
           <LucidePlus />
           Nova pesquisa
