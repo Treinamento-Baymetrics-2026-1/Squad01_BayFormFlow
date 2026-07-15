@@ -2,7 +2,6 @@
   "version": "5",
   "specifiers": {
     "jsr:@std/assert@*": "1.0.19",
-    "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.13",
     "jsr:@std/testing@*": "1.0.19",
@@ -96,37 +95,13 @@
     }
   },
   "workspace": {
-    "members": {
-      "auth": {
-        "dependencies": [
-          "jsr:@std/assert@*",
-          "jsr:@std/testing@*",
-          "npm:@hono/zod-validator@*",
-          "npm:@supabase/supabase-js@2",
-          "npm:hono@*",
-          "npm:zod@*"
-        ]
-      },
-      "forms": {
-        "dependencies": [
-          "jsr:@std/assert@*",
-          "jsr:@std/testing@*",
-          "npm:@hono/zod-validator@*",
-          "npm:@supabase/supabase-js@2",
-          "npm:hono@*",
-          "npm:zod@*"
-        ]
-      },
-      "researches": {
-        "dependencies": [
-          "jsr:@std/assert@*",
-          "jsr:@std/testing@*",
-          "npm:@hono/zod-validator@*",
-          "npm:@supabase/supabase-js@2",
-          "npm:hono@*",
-          "npm:zod@*"
-        ]
-      }
-    }
+    "dependencies": [
+      "jsr:@std/assert@*",
+      "jsr:@std/testing@*",
+      "npm:@hono/zod-validator@*",
+      "npm:@supabase/supabase-js@2",
+      "npm:hono@*",
+      "npm:zod@*"
+    ]
   }
 }
