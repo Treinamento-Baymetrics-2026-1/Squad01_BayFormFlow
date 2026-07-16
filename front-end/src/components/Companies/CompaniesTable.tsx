@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Table,
   TableHeader,
@@ -18,6 +19,7 @@ import { Button } from "../ui/button";
 import { usePagination } from "@/hooks/usePagination";
 import { CompaniesFormModal } from "./CompaniesFormModal";
 import { TablePagination } from "../ui/PaginationDefault";
+import { getCompaniesEdgeFunction } from "@/api/companies";
 
 const empresas = [
   {
@@ -72,8 +74,67 @@ interface Empresa {
   status: string;
 }
 
+const formatCNPJ = (cnpj: string) => {
+  const cleaned = cnpj.replace(/\D/g, "");
+  if (cleaned.length !== 14) return cnpj;
+  return cleaned.replace(
+    /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
+    "$1.$2.$3/$4-$5",
+  );
+};
+
 export const CompaniesTable = () => {
-  const { currentItems, paginationProps } = usePagination({ data: empresas });
+  // modificações locais na sessão
+  const [novasEmpresas, setNovasEmpresas] = useState<Empresa[]>([]);
+  const [empresasEditadas, setEmpresasEditadas] = useState<
+    Record<string, Empresa>
+  >({});
+
+  // api
+  const { data: listaEmpresas = empresas } = useQuery<Empresa[]>({
+    queryKey: ["companies"],
+    queryFn: async () => {
+      const response = await getCompaniesEdgeFunction();
+
+      if (response && Array.isArray(response.companies)) {
+        const empresasAdaptadas: Empresa[] = response.companies.map(
+          (apiCompany) => {
+            const formattedName = apiCompany.display_name || "Sem Nome";
+            const generatedEmail = `admin@${formattedName.toLowerCase().replace(/\s+/g, "")}.com.br`;
+
+            return {
+              razaoSocial: formattedName,
+              nomeFantasia: formattedName,
+              cnpj: formatCNPJ(apiCompany.cnpj),
+              email: generatedEmail,
+              status: apiCompany.is_deleted ? "Inativo" : "Ativo",
+            };
+          },
+        );
+
+        // retorna a dados locais com os da api
+        return [...empresas, ...empresasAdaptadas];
+      }
+
+      return empresas;
+    },
+    initialData: empresas, //garante dados locais iniciais
+  });
+
+  // novas empresas ao final do array
+  const listaUnificada = [
+    ...listaEmpresas.map((empresa) => {
+      if (empresasEditadas[empresa.cnpj]) {
+        return empresasEditadas[empresa.cnpj];
+      }
+      return empresa;
+    }),
+    ...novasEmpresas,
+  ];
+
+  const { currentItems, paginationProps } = usePagination({
+    data: listaUnificada,
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Empresa | null>(null);
@@ -93,9 +154,48 @@ export const CompaniesTable = () => {
     setSelectedCompany(null);
   };
 
-  const handleToggleStatus = (email: string, currentStatus: string) => {
-    // eslint-disable-next-line no-console
-    console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
+  const handleSaveCompany = (dadosForm: Empresa) => {
+    if (selectedCompany) {
+      // se for editar
+      const cnpjChave = selectedCompany.cnpj;
+
+      // se add empresa, altera no array
+      if (novasEmpresas.some((emp) => emp.cnpj === cnpjChave)) {
+        setNovasEmpresas((prev) =>
+          prev.map((emp) => (emp.cnpj === cnpjChave ? dadosForm : emp)),
+        );
+      } else {
+        // se for uma empresa do mock ou da api
+        setEmpresasEditadas((prev) => ({
+          ...prev,
+          [cnpjChave]: dadosForm,
+        }));
+      }
+    } else {
+      // vai direto para o fim da lista do array
+      setNovasEmpresas((prev) => [...prev, dadosForm]);
+    }
+  };
+
+  const handleToggleStatus = (cnpj: string, currentStatus: string) => {
+    const novoStatus = currentStatus === "Ativo" ? "Inativo" : "Ativo";
+
+    // busca a empresa para mapear a alteração corretamente
+    const empresaAlvo = listaUnificada.find((emp) => emp.cnpj === cnpj);
+    if (!empresaAlvo) return;
+
+    const empresaModificada = { ...empresaAlvo, status: novoStatus };
+
+    if (novasEmpresas.some((emp) => emp.cnpj === cnpj)) {
+      setNovasEmpresas((prev) =>
+        prev.map((emp) => (emp.cnpj === cnpj ? empresaModificada : emp)),
+      );
+    } else {
+      setEmpresasEditadas((prev) => ({
+        ...prev,
+        [cnpj]: empresaModificada,
+      }));
+    }
   };
 
   return (
@@ -141,7 +241,7 @@ export const CompaniesTable = () => {
           <TableBody className="bg-gray-light-placeholder">
             {currentItems.map((item, index) => (
               <TableRow
-                key={index}
+                key={item.cnpj || index}
                 className={`border-b border-gray-100 ${
                   index % 2 !== 1 ? "bg-gray-light-placeholder" : "bg-white"
                 }`}
@@ -185,7 +285,7 @@ export const CompaniesTable = () => {
                     >
                       <DropdownMenuItem
                         onClick={() =>
-                          handleToggleStatus(item.email, item.status)
+                          handleToggleStatus(item.cnpj, item.status)
                         }
                         className="cursor-pointer text-sm font-medium py-2 px-4 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none text-accent-foreground"
                       >
@@ -208,6 +308,7 @@ export const CompaniesTable = () => {
         <CompaniesFormModal
           empresa={selectedCompany}
           onClose={handleCloseModal}
+          onSave={handleSaveCompany}
         />
       )}
     </div>
