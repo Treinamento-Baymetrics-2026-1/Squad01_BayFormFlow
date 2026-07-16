@@ -51,7 +51,9 @@ export const UserFormModal = ({
     onSuccess: (formData) => {
       // atualiza
       queryClient.setQueryData<Usuario[]>(["users"], (oldData) => {
-        if (!oldData) return [];
+        if (!oldData) {
+          return [];
+        }
 
         if (isEditMode && usuario) {
           // substitui o dado antigo pelo editado
@@ -82,7 +84,6 @@ export const UserFormModal = ({
       onClose();
     },
     onError: (error) => {
-      // eslint-disable-next-line no-console
       console.error("Erro ao salvar usuário:", error);
     },
   });

@@ -134,7 +134,9 @@ export const UserTable = () => {
   const handleToggleStatus = (email: string, currentStatus: string) => {
     // atualiza automaticamente o status
     queryClient.setQueryData<Usuario[]>(["users"], (oldData) => {
-      if (!oldData) return [];
+      if (!oldData) {
+        return [];
+      }
       return oldData.map((usuario) =>
         usuario.email === email
           ? {
