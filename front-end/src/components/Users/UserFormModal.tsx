@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { X, CircleCheckBig, ChevronDown, TriangleAlert } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { userFormSchema } from "@/schema/userFormSchema";
 import type { UserFormData } from "@/schema/userFormSchema";
 
@@ -10,6 +11,7 @@ interface Usuario {
   email: string;
   perfil: string;
   status: string;
+  termo: string;
 }
 
 interface UserFormModalProps {
@@ -21,7 +23,7 @@ export const UserFormModal = ({
   usuario = null,
   onClose,
 }: UserFormModalProps) => {
-  // Identifica dinamicamente se é o modo de edição
+  const queryClient = useQueryClient();
   const isEditMode = !!usuario;
 
   const {
@@ -38,6 +40,50 @@ export const UserFormModal = ({
       email: usuario?.email ?? "",
       perfil: usuario?.perfil ?? "",
       status: (usuario?.status as "Ativo" | "Inativo") ?? "Ativo",
+    },
+  });
+
+  // Cadastrar ou editar atualizando local
+  const saveUserMutation = useMutation({
+    mutationFn: async (formData: UserFormData) => {
+      return formData;
+    },
+    onSuccess: (formData) => {
+      // atualiza
+      queryClient.setQueryData<Usuario[]>(["users"], (oldData) => {
+        if (!oldData) return [];
+
+        if (isEditMode && usuario) {
+          // substitui o dado antigo pelo editado
+          return oldData.map((item) =>
+            item.email === usuario.email
+              ? {
+                  ...item,
+                  nome: formData.nome,
+                  email: formData.email,
+                  perfil: formData.perfil,
+                  status: formData.status,
+                }
+              : item,
+          );
+        } else {
+          // Adiciona no final da lista
+          const novoUsuario: Usuario = {
+            nome: formData.nome,
+            email: formData.email,
+            perfil: formData.perfil,
+            status: formData.status,
+            termo: "Pendente",
+          };
+          return [...oldData, novoUsuario];
+        }
+      });
+
+      onClose();
+    },
+    onError: (error) => {
+      // eslint-disable-next-line no-console
+      console.error("Erro ao salvar usuário:", error);
     },
   });
 
@@ -65,14 +111,7 @@ export const UserFormModal = ({
   }, [usuario, reset]);
 
   const onSubmit = (data: UserFormData) => {
-    if (isEditMode) {
-      // eslint-disable-next-line no-console
-      console.log("Salvando modificações:", data);
-    } else {
-      // eslint-disable-next-line no-console
-      console.log("Cadastrando novo usuário:", data);
-    }
-    onClose();
+    saveUserMutation.mutate(data);
   };
 
   return (
@@ -230,9 +269,10 @@ export const UserFormModal = ({
             </button>
             <button
               type="submit"
-              className="px-6 h-9 w-38.25 rounded-md bg-blue-primary text-base font-bold text-white shadow-md cursor-pointer"
+              disabled={saveUserMutation.isPending}
+              className="px-6 h-9 w-38.25 rounded-md bg-blue-primary text-base font-bold text-white shadow-md cursor-pointer disabled:opacity-50"
             >
-              Salvar
+              {saveUserMutation.isPending ? "Salvando..." : "Salvar"}
             </button>
           </div>
         </form>

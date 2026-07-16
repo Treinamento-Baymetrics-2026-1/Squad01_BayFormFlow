@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableHeader,
@@ -18,8 +19,9 @@ import { Button } from "../ui/button";
 import { usePagination } from "@/hooks/usePagination";
 import { UserFormModal } from "./UserFormModal";
 import { TablePagination } from "../ui/PaginationDefault";
+import { getUsersEdgeFunction } from "@/api/users";
 
-const usuarios = [
+const usuarios: Usuario[] = [
   {
     nome: "Joana Mota",
     email: "joana@baymetrics.com",
@@ -73,7 +75,38 @@ interface Usuario {
 }
 
 export const UserTable = () => {
-  const { currentItems, paginationProps } = usePagination({ data: usuarios }); // , initialItemsPerPage: 2 (alterar itens por páginas apenas nessa tela (padrão 6))
+  const queryClient = useQueryClient();
+
+  // api
+  const { data: listaUsuarios = usuarios } = useQuery<Usuario[]>({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const response = await getUsersEdgeFunction();
+
+      if (response && Array.isArray(response.users)) {
+        // adapta retorno da api para o formato da tabela
+        const usuariosAdaptados: Usuario[] = response.users.map((apiUser) => ({
+          nome: apiUser.display_name || "Sem Nome",
+          email:
+            apiUser.email ||
+            `${apiUser.display_name.toLowerCase().replace(/\s+/g, "")}@baymetrics.com`,
+          perfil: apiUser.role?.position || "Validador",
+          status: apiUser.is_deleted ? "Inativo" : "Ativo",
+          termo: "Pendente",
+        }));
+
+        // retorna a dados locais com os da api
+        return [...usuarios, ...usuariosAdaptados];
+      }
+
+      return usuarios;
+    },
+    initialData: usuarios, //garante dados locais iniciais
+  });
+
+  const { currentItems, paginationProps } = usePagination({
+    data: listaUsuarios,
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
@@ -99,8 +132,18 @@ export const UserTable = () => {
   };
 
   const handleToggleStatus = (email: string, currentStatus: string) => {
-    // eslint-disable-next-line no-console
-    console.log(`Alterando status de ${email}. Status atual: ${currentStatus}`);
+    // atualiza automaticamente o status
+    queryClient.setQueryData<Usuario[]>(["users"], (oldData) => {
+      if (!oldData) return [];
+      return oldData.map((usuario) =>
+        usuario.email === email
+          ? {
+              ...usuario,
+              status: currentStatus === "Ativo" ? "Inativo" : "Ativo",
+            }
+          : usuario,
+      );
+    });
   };
 
   return (
