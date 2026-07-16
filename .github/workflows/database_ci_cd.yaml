@@ -93,6 +93,7 @@ jobs:
           FLYWAY_URL: jdbc:postgresql://127.0.0.1:54322/postgres
           FLYWAY_USER: postgres
           FLYWAY_PASS: postgres
+          FLYWAY_SCHEMAS: ops_flyway
           MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
         run: |
           flyway \
@@ -101,6 +102,7 @@ jobs:
             -password="$FLYWAY_PASS" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -baselineOnMigrate=true \
+            -defaultSchema="$FLYWAY_SCHEMAS" \
             migrate
 
       - name: Validar estado do banco
@@ -136,6 +138,7 @@ jobs:
 
       - name: Executar Deploy no Supabase
         env:
+          FLYWAY_SCHEMAS: ops_flyway
           MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
         run: |
           echo "Iniciando a migração em produção..."
@@ -144,6 +147,7 @@ jobs:
             -user="${{ secrets.SPBS_DB_USER_DEV }}" \
             -password="${{ secrets.SPBS_DB_PASS_DEV }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
+            -defaultSchema="$FLYWAY_SCHEMAS" \
             -baselineOnMigrate="true" \
             migrate
   
@@ -169,6 +173,7 @@ jobs:
 
       - name: Executar Deploy no Supabase
         env:
+          FLYWAY_SCHEMAS: ops_flyway
           MIGRATIONS_DIR: ${{ github.event.inputs.migrations_path || env.DEFAULT_MIGRATIONS_PATH }}
         run: |
           echo "Iniciando a migração em produção..."
@@ -177,5 +182,6 @@ jobs:
             -user="${{ secrets.SPBS_DB_USER_PROD }}" \
             -password="${{ secrets.SPBS_DB_PASS_PROD }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
+            -defaultSchema="$FLYWAY_SCHEMAS" \
             -baselineOnMigrate="true" \
             migrate
