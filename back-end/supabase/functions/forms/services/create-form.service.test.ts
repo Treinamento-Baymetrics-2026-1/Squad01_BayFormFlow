@@ -5,7 +5,14 @@ import {
   type CreateFormPorts,
 } from "./create-form.service.ts";
 import type { CallerIdentity } from "../../_shared/ports/admin.port.ts";
-import type { InsertResult, NewFormRow, NewFormVersionRow, WriteResult } from "../ports/forms-repo.port.ts";
+import type {
+  FormSummaryRow,
+  InsertResult,
+  ListFormsFilter,
+  NewFormRow,
+  NewFormVersionRow,
+  WriteResult,
+} from "../ports/forms-repo.port.ts";
 import type { CreateFormInput } from "../schemas/create-form.schema.ts";
 
 const ADMIN: CallerIdentity = { userId: "admin-1", isAdmin: true };
@@ -47,7 +54,14 @@ function buildPorts(cfg: FakeConfig = {}) {
 
   const ports: CreateFormPorts = {
     admin: { me },
-    repos: { isResearchManager, researchExists, insertForm, insertFormVersion, deleteFormHard },
+    repos: {
+      isResearchManager,
+      researchExists,
+      insertForm,
+      insertFormVersion,
+      deleteFormHard,
+      listForms: spy((_filter: ListFormsFilter): Promise<FormSummaryRow[]> => Promise.resolve([])),
+    },
   };
 
   return { ports, me, isResearchManager, researchExists, insertForm, insertFormVersion, deleteFormHard };
