@@ -73,15 +73,6 @@ jobs:
         run: npm install -g supabase
 
       - name: Instalar Flyway CLI
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Instalar Supabase CLI
-        run: npm install -g supabase
-
-      - name: Instalar Flyway CLI
         run: |
           wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/${{ env.FLYWAY_VERSION }}/flyway-commandline-${{ env.FLYWAY_VERSION }}-linux-x64.tar.gz \
             | tar -xz
@@ -133,7 +124,7 @@ jobs:
 
     if: |
       github.ref == 'refs/heads/dev' &&
-      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')    
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')  
 
     steps:
       - name: Checkout do código
