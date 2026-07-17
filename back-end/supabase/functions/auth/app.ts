@@ -14,7 +14,7 @@ export const app = new Hono().basePath("/auth");
 app.use(
   "*",
   cors({
-    origin: "http://127.0.0.1:3000",
+    origin: ["http://127.0.0.1:3000", "https://squad01-bay-form-flow-rose.vercel.app"],
     allowHeaders: ["authorization", "x-client-info", "apikey", "content-type"],
     allowMethods: ["GET", "POST", "OPTIONS"],
   }),

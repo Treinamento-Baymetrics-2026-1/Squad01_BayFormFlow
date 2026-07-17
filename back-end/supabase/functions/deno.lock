@@ -107,6 +107,12 @@
           "npm:zod@*"
         ]
       },
+      "docs": {
+        "dependencies": [
+          "jsr:@std/assert@*",
+          "npm:hono@*"
+        ]
+      },
       "forms": {
         "dependencies": [
           "jsr:@std/assert@*",
