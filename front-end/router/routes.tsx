@@ -13,11 +13,9 @@ import { WorkInProgressPage } from "@/pages/WorkInProgress";
 export const Router = createBrowserRouter([
   {
     path: "/",
-    path: "/",
     element: <AuthPage />,
   },
   {
-    element: <ProtectedRoute />,
     element: <ProtectedRoute />,
     children: [
       {
