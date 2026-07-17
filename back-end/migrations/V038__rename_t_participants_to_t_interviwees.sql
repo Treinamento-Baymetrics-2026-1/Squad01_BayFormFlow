@@ -1,0 +1,1 @@
+ALTER TABLE requesters.t_participants RENAME TO t_interviwees;
