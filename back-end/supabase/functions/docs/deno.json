@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "hono": "npm:hono",
+    "hono/cors": "npm:hono/cors",
+    "@std/assert": "jsr:@std/assert"
+  }
+}
