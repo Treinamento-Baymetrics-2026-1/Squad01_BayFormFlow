@@ -16,11 +16,13 @@ interface Empresa {
 interface CompaniesFormModalProps {
   empresa?: Empresa | null; // Se enviado, vira modo edição, se omitido, vira cadastro
   onClose: () => void;
+  onSave: (data: Empresa) => void; // salvar dados local
 }
 
 export const CompaniesFormModal = ({
   empresa = null,
   onClose,
+  onSave,
 }: CompaniesFormModalProps) => {
   const isEditMode = !!empresa;
 
@@ -58,7 +60,7 @@ export const CompaniesFormModal = ({
     } else {
       reset({
         razaoSocial: "",
-        nomeFantasia: "", 
+        nomeFantasia: "",
         email: "",
         cnpj: "",
         status: "Ativo",
@@ -67,13 +69,13 @@ export const CompaniesFormModal = ({
   }, [empresa, reset]);
 
   const onSubmit = (data: CompaniesFormData) => {
-    if (isEditMode) {
-      // eslint-disable-next-line no-console
-      console.log("Salvando modificações:", data);
-    } else {
-      // eslint-disable-next-line no-console
-      console.log("Cadastrando nova empresa:", data);
-    }
+    onSave({
+      razaoSocial: data.razaoSocial,
+      nomeFantasia: data.nomeFantasia,
+      cnpj: data.cnpj,
+      email: data.email,
+      status: data.status ?? "Ativo",
+    });
     onClose();
   };
 
@@ -94,15 +96,18 @@ export const CompaniesFormModal = ({
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
-          
           <div className="grid gap-4">
             {/* Razão social */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-black">Razão social</label>
+              <label className="text-sm font-bold text-black">
+                Razão social
+              </label>
               <input
                 type="text"
                 className={`w-full h-10 px-3 border rounded-lg text-sm text-black shadow-box-field focus:outline-none placeholder:text-gray-placeholder ${
-                  errors.razaoSocial ? "border-feedback-error" : "border-neutral-blue"
+                  errors.razaoSocial
+                    ? "border-feedback-error"
+                    : "border-neutral-blue"
                 }`}
                 placeholder="Digite a razão social da empresa"
                 {...register("razaoSocial")}
@@ -117,11 +122,15 @@ export const CompaniesFormModal = ({
 
             {/* Nome fantasia */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-black">Nome fantasia</label>
+              <label className="text-sm font-bold text-black">
+                Nome fantasia
+              </label>
               <input
                 type="text"
                 className={`w-full h-10 px-3 border rounded-lg text-sm text-black shadow-box-field focus:outline-none placeholder:text-gray-placeholder ${
-                  errors.nomeFantasia ? "border-feedback-error" : "border-neutral-blue"
+                  errors.nomeFantasia
+                    ? "border-feedback-error"
+                    : "border-neutral-blue"
                 }`}
                 placeholder="Digite o nome fantasia da empresa"
                 {...register("nomeFantasia")}
@@ -215,13 +224,13 @@ export const CompaniesFormModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 h-10 w-38.25 rounded-lg border border-blue-primary text-base font-bold text-blue-primary cursor-pointer hover:bg-blue-50 transition-colors"
+              className="px-6 h-10 w-38.25 rounded-lg border border-blue-primary text-base font-bold text-blue-primary cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-6 h-10 w-38.25 rounded-lg bg-blue-primary text-base font-bold text-white shadow-md cursor-pointer hover:bg-blue-900 transition-colors"
+              className="px-6 h-10 w-38.25 rounded-lg bg-blue-primary text-base font-bold text-white shadow-md cursor-pointer"
             >
               Salvar
             </button>
