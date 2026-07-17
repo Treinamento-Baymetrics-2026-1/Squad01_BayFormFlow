@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "../ui/PaginationDefault";
+import { useNavigate } from "react-router-dom";
 
 const pesquisas = [
   {
@@ -63,9 +64,9 @@ const pesquisas = [
 ];
 
 export const SurveyTableAdm = () => {
-  const {
-    currentItems, paginationProps
-  } = usePagination({ data: pesquisas });
+  const { currentItems, paginationProps } = usePagination({ data: pesquisas });
+
+  const navigate = useNavigate();
 
   return (
     <div className="w-full px-16 py-17.5">
@@ -73,7 +74,8 @@ export const SurveyTableAdm = () => {
         <h3 className="font-bold text-2xl text-blue-primary">Pesquisas</h3>
         <Button
           type="button"
-          className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary shadow-box-field"
+          onClick={() => navigate("/pesquisas/nova-pesquisa")}
+          className="w-40 h-9 rounded-lg border px-4 py-2 gap-2.5 bg-blue-primary hover:bg-blue-primary shadow-box-field cursor-pointer"
         >
           <LucidePlus />
           Nova pesquisa
@@ -161,7 +163,7 @@ export const SurveyTableAdm = () => {
         </Table>
 
         {/* Componente de paginação (ui/PaginationDefault.tsx) */}
-        <TablePagination {...paginationProps}/>
+        <TablePagination {...paginationProps} />
       </div>
     </div>
   );

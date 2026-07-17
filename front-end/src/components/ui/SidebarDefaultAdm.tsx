@@ -91,8 +91,10 @@ export const SidebarDefaultAdm = ({
           <nav className="space-y-1">
             {menuPrincipal.map((item, index) => {
               const Icone = item.icone;
-              // pathname igual rota, destaque ativo
-              const isActive = location.pathname === item.page;
+              // pathname igual rota ou inicidado igual, destaque ativo
+              const isActive =
+                location.pathname === item.page ||
+                location.pathname.startsWith(`${item.page}/`);
 
               return (
                 <button
@@ -123,7 +125,9 @@ export const SidebarDefaultAdm = ({
             {menuAdministracao.map((item, index) => {
               const Icone = item.icone;
               // mesma validação para a seção de administração
-              const isActive = location.pathname === item.page;
+              const isActive =
+                location.pathname === item.page ||
+                location.pathname.startsWith(`${item.page}/`);
               return (
                 <button
                   key={index}
