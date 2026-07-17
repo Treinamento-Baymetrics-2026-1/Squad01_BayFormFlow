@@ -52,7 +52,14 @@ jobs:
 
   migration-test:
     name: Dry-Run Migrations (Supabase Local)
+    name: Dry-Run Migrations (Supabase Local)
     runs-on: ubuntu-22.04
+    needs: [sql-linting]
+
+    env:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password_ephemeral
+      POSTGRES_DB: app_test_db
     needs: [sql-linting]
 
     env:
@@ -63,7 +70,17 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v5
+        uses: actions/checkout@v5
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar Supabase CLI
+        run: npm install -g supabase
+
+      - name: Instalar Flyway CLI
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -121,8 +138,11 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [migration-test] 
     environment: Dev
+    environment: Dev
 
     if: |
+      github.ref == 'refs/heads/dev' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')  
       github.ref == 'refs/heads/dev' &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'push')  
 
@@ -146,6 +166,9 @@ jobs:
             -url="${{ secrets.SPBS_DB_URL_DEV }}" \
             -user="${{ secrets.SPBS_DB_USER_DEV }}" \
             -password="${{ secrets.SPBS_DB_PASS_DEV }}" \
+            -url="${{ secrets.SPBS_DB_URL_DEV }}" \
+            -user="${{ secrets.SPBS_DB_USER_DEV }}" \
+            -password="${{ secrets.SPBS_DB_PASS_DEV }}" \
             -locations="filesystem:$MIGRATIONS_DIR" \
             -defaultSchema="$FLYWAY_SCHEMAS" \
             -baselineOnMigrate="true" \
@@ -156,8 +179,11 @@ jobs:
     runs-on: ubuntu-22.04
     needs: [migration-test] 
     environment: Production
+    environment: Production
 
     if: |
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
 
@@ -178,6 +204,9 @@ jobs:
         run: |
           echo "Iniciando a migração em produção..."
           flyway \
+            -url="${{ secrets.SPBS_DB_URL_PROD }}" \
+            -user="${{ secrets.SPBS_DB_USER_PROD }}" \
+            -password="${{ secrets.SPBS_DB_PASS_PROD }}" \
             -url="${{ secrets.SPBS_DB_URL_PROD }}" \
             -user="${{ secrets.SPBS_DB_USER_PROD }}" \
             -password="${{ secrets.SPBS_DB_PASS_PROD }}" \

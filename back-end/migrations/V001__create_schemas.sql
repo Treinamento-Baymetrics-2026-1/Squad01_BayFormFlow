@@ -9,5 +9,6 @@ CREATE SCHEMA IF NOT EXISTS helpers;
  
 -- Extensions
 CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS pgcrypto
     WITH SCHEMA extensions;

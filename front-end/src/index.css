@@ -30,8 +30,15 @@
 
   --color-accent-foreground: #171717;
 
+  --color-accent-foreground: #171717;
+
   --color-progress-none: #003554;
 
+
+  --color-status-active: #047857;
+  --color-status-active-light: #CFFFE0;
+
+  --color-status-disabled: #475569;
 
   --color-status-active: #047857;
   --color-status-active-light: #CFFFE0;
